@@ -61,7 +61,7 @@ const getOAuthRedirectUri = (provider: Exclude<AuthProvider, "dev" | "dev-admin"
   return `${window.location.origin}/auth/callback/${provider}`;
 };
 
-const normalizeRedirectTo = (value: unknown) => {
+export const normalizeRedirectTo = (value: unknown) => {
   if (typeof value !== "string") return null;
   const trimmed = value.trim();
   if (!trimmed.startsWith("/") || trimmed.startsWith("//")) return null;

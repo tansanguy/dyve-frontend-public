@@ -21,6 +21,7 @@ import {
   type GroupDiveApplicationDto,
   type GroupDiveDto,
 } from "../services/api";
+import { normalizeKoreanMobileNumber } from "../utils/phone";
 import "react-datepicker/dist/react-datepicker.css";
 
 const TABS = [
@@ -58,6 +59,32 @@ const GENDER_LABELS: Record<GroupDiveApplicationDto["gender"], string> = {
   female: "여성",
   male: "남성",
   other: "기타",
+};
+const APPLICATION_STATUS_LABELS: Record<string, string> = {
+  payment_pending: "보증금 결제 대기",
+  payment_failed: "결제 실패",
+  deposit_paid: "신청 완료",
+  under_review: "검토 중",
+  waitlisted: "회차 대기",
+  assigned_final_payment_pending: "잔금 결제 대기",
+  confirmed: "참여 확정",
+  completed: "참여 완료",
+  refund_pending: "환불 처리 중",
+  free_search: "보증금 없이 탐색 중",
+  final_payment_expired: "잔금 기한 만료",
+  unassigned: "미배정",
+  cancelled: "취소",
+};
+const PAYMENT_PURPOSE_LABELS: Record<string, string> = {
+  deposit_and_application_fee: "보증금 · 신청비",
+  final_payment: "잔금",
+};
+const PAYMENT_STATUS_LABELS: Record<string, string> = {
+  authorized: "입금 대기",
+  paid: "입금 완료",
+  failed: "결제 실패",
+  partially_refunded: "부분 환불",
+  refunded: "환불 완료",
 };
 const TIME_OPTIONS = Array.from({ length: 48 }, (_, index) => {
   const hours = String(Math.floor(index / 2)).padStart(2, "0");
@@ -658,6 +685,7 @@ export function AdminGroupDivePage() {
     try {
       await api.adminUpdateGroupDiveApplicationStatus(applicationId, status);
       if (selectedId) setApplications((await api.adminListGroupDiveApplications(selectedId)).data);
+      toast.success("신청 상태를 변경했습니다.");
     } catch (statusError) {
       toast.error(formatApiError(statusError, "신청 상태를 변경하지 못했습니다."));
     }
@@ -1374,7 +1402,8 @@ export function AdminGroupDivePage() {
 }
 
 function ApplicationTable({ applications, onStatus, onRelease }: { applications: GroupDiveApplicationDto[]; onStatus: (id: string, status: string) => Promise<void>; onRelease: (assignmentId: string) => Promise<void> }) {
-  const [showDepositHoldersOnly, setShowDepositHoldersOnly] = useState(true);
+  const [showDepositHoldersOnly, setShowDepositHoldersOnly] = useState(false);
+  const [updatingId, setUpdatingId] = useState<string | null>(null);
   const visibleApplications = showDepositHoldersOnly
     ? applications.filter((application) =>
         application.payments.some(
@@ -1401,19 +1430,25 @@ function ApplicationTable({ applications, onStatus, onRelease }: { applications:
           표시 {visibleApplications.length}명 / 전체 {applications.length}명
         </span>
       </div>
-      <div className="overflow-x-auto">
-        <table className="w-full min-w-[48rem] text-left text-sm">
-          <thead className="border-b border-[var(--color-hairline)] text-xs text-[var(--color-muted)]">
-            <tr><th className="p-3">신청자</th><th className="p-3">성별</th><th className="p-3">지역 / 일정</th><th className="p-3">상태</th><th className="p-3">처리</th></tr>
-          </thead>
-          <tbody>
-            {visibleApplications.map((application) => (
-              <tr key={application.id} className="border-b border-[var(--color-hairline)]">
-                <td className="p-3 font-bold">
-                  {application.nickname}
-                  <span className="block text-xs font-normal text-[var(--color-muted)]">{application.user?.name}</span>
+      <div className="mt-3 grid gap-3">
+        {visibleApplications.map((application) => {
+          const phone = normalizeKoreanMobileNumber(application.phoneNumber);
+          const statusOptions = [application.status, ...(application.statusOptions ?? [])];
+          return (
+            <article key={application.id} className="rounded-[var(--radius-card-lg)] border border-[var(--color-hairline)] bg-[var(--color-canvas)] p-4 shadow-[var(--shadow-card-soft)]">
+              <div className="grid gap-5 xl:grid-cols-2 2xl:grid-cols-[minmax(11rem,1fr)_minmax(12rem,1fr)_minmax(13rem,1fr)_minmax(14rem,1.1fr)]">
+                <div>
+                  <p className="text-base font-black text-[var(--color-ink)]">{application.nickname}</p>
+                  <p className="mt-1 text-xs text-[var(--color-muted)]">{application.user?.name || "이름 미등록"} · {GENDER_LABELS[application.gender] ?? "성별 미등록"}</p>
+                  {phone ? (
+                    <a href={`tel:${phone}`} className="mt-3 inline-flex min-h-11 items-center rounded-[var(--radius-button-md)] bg-[var(--color-surface-soft)] px-3 text-sm font-bold tabular-nums text-[var(--color-ink)] underline-offset-4 hover:underline">
+                      {formatPhoneNumber(phone)}
+                    </a>
+                  ) : (
+                    <p className="mt-3 text-sm font-bold text-[var(--color-error)]">전화번호 없음</p>
+                  )}
                   {application.answers && application.answers.length > 0 && (
-                    <details className="mt-2 font-normal">
+                    <details className="mt-3">
                       <summary className="cursor-pointer text-xs font-bold text-[var(--color-primary)]">질문 답변 보기</summary>
                       <dl className="mt-2 grid gap-2 text-xs">
                         {application.answers.map((answer) => (
@@ -1425,45 +1460,74 @@ function ApplicationTable({ applications, onStatus, onRelease }: { applications:
                       </dl>
                     </details>
                   )}
-                </td>
-                <td className="p-3">{GENDER_LABELS[application.gender] ?? "—"}</td>
-                <td className="p-3 text-xs">
-                  {application.selectedArea?.label || "협의"}
-                  <span className="block text-[var(--color-muted)]">
+                </div>
+                <div>
+                  <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[var(--color-muted)]">희망 지역 · 일정</p>
+                  <p className="mt-2 text-sm font-bold">{application.selectedArea?.label || "지역 협의"}</p>
+                  <p className="mt-1 text-xs leading-5 text-[var(--color-muted)]">
                     {application.availableDates?.length
                       ? application.availableDates.join(", ")
-                      : application.selectedSchedules.map((item) => item.label).join(", ")}
-                  </span>
-                </td>
-                <td className="p-3">{application.status}</td>
-                <td className="p-3">
-                  <div className="flex gap-2">
-                    {application.status === "deposit_paid" && <button type="button" onClick={() => void onStatus(application.id, "under_review")} className="font-bold text-[var(--color-primary)]">검토 시작</button>}
-                    {["deposit_paid", "under_review"].includes(application.status) && <button type="button" onClick={() => void onStatus(application.id, "waitlisted")} className="font-bold text-[var(--color-primary)]">대기</button>}
-                    {application.assignment?.status === "pending_payment" && <button type="button" onClick={() => void onRelease(application.assignment!.id)} className="font-bold text-[var(--color-error)]">배정 해제</button>}
+                      : application.selectedSchedules.map((item) => item.label).join(", ") || "일정 협의"}
+                  </p>
+                </div>
+                <label className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[var(--color-muted)]">
+                  신청 상태
+                  <select
+                    aria-label={`${application.nickname} 신청 상태`}
+                    value={application.status}
+                    disabled={updatingId !== null || statusOptions.length === 1}
+                    onChange={(event) => {
+                      setUpdatingId(application.id);
+                      void onStatus(application.id, event.target.value).finally(() => setUpdatingId(null));
+                    }}
+                    className="mt-2 min-h-11 w-full rounded-[var(--radius-button-md)] border border-[var(--color-hairline-strong)] bg-[var(--color-canvas)] px-3 text-sm font-bold normal-case tracking-normal text-[var(--color-ink)] disabled:opacity-60"
+                  >
+                    {statusOptions.map((status) => <option key={status} value={status}>{APPLICATION_STATUS_LABELS[status] ?? status}</option>)}
+                  </select>
+                  {updatingId === application.id && <span aria-live="polite" className="mt-1 block text-xs normal-case tracking-normal">변경 중...</span>}
+                </label>
+                <div>
+                  <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[var(--color-muted)]">입금 현황</p>
+                  <div className="mt-2 grid gap-2">
+                    {application.payments.length > 0 ? application.payments.map((payment) => (
+                      <div key={payment.paymentId} className="flex items-center justify-between gap-3 text-xs">
+                        <span>
+                          <strong className="block text-[var(--color-body)]">{PAYMENT_PURPOSE_LABELS[payment.purpose] ?? payment.purpose}</strong>
+                          <span className="tabular-nums text-[var(--color-muted)]">₩{payment.amount.toLocaleString()}</span>
+                        </span>
+                        <span className={`rounded-[var(--radius-pill)] px-2 py-1 font-bold ${payment.status === "paid" ? "bg-[var(--color-success-soft)] text-[var(--color-success)]" : "bg-[var(--color-surface-soft)] text-[var(--color-body)]"}`}>
+                          {PAYMENT_STATUS_LABELS[payment.status] ?? payment.status}
+                        </span>
+                      </div>
+                    )) : <p className="text-sm font-semibold text-[var(--color-muted)]">입금 내역 없음</p>}
                   </div>
-                </td>
-              </tr>
-            ))}
-            {visibleApplications.length === 0 && (
-              <tr>
-                <td colSpan={5} className="p-8 text-center text-sm text-[var(--color-muted)]">
-                  {applications.length === 0 ? (
-                    <span className="block">아직 신청자가 없습니다.</span>
-                  ) : (
-                    <>
-                      <span className="block">현재 보증금을 보유 중인 신청자가 없습니다.</span>
-                      <span className="mt-1 block">필터를 해제하면 전체 신청자를 볼 수 있습니다.</span>
-                    </>
+                  {application.assignment?.status === "pending_payment" && (
+                    <button type="button" onClick={() => void onRelease(application.assignment!.id)} className="mt-3 min-h-11 text-sm font-bold text-[var(--color-error)]">배정 해제</button>
                   )}
-                </td>
-              </tr>
+                </div>
+              </div>
+            </article>
+          );
+        })}
+        {visibleApplications.length === 0 && (
+          <div className="rounded-[var(--radius-card-lg)] border border-dashed border-[var(--color-hairline-strong)] p-8 text-center text-sm text-[var(--color-muted)]">
+            {applications.length === 0 ? (
+              <span className="block">아직 신청자가 없습니다.</span>
+            ) : (
+              <>
+                <span className="block">현재 보증금을 보유 중인 신청자가 없습니다.</span>
+                <span className="mt-1 block">필터를 해제하면 전체 신청자를 볼 수 있습니다.</span>
+              </>
             )}
-          </tbody>
-        </table>
+          </div>
+        )}
       </div>
     </div>
   );
+}
+
+function formatPhoneNumber(phone: string) {
+  return phone.replace(/^(010)(\d{4})(\d{4})$/, "$1-$2-$3");
 }
 
 function formatAnswer(value: unknown) {

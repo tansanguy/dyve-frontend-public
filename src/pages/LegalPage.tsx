@@ -20,7 +20,9 @@ export function LegalPage({ kind }: LegalPageProps) {
         <div className="space-y-8">
           <header>
             <h1 className="ty-section-title">{isTerms ? "DYVE 이용약관" : "DYVE 개인정보처리방침"}</h1>
-            <p className="mt-2 text-sm text-[var(--color-muted)]">시행일: 2026년 7월 27일</p>
+            <p className="mt-2 text-sm text-[var(--color-muted)]">
+              시행일: {isTerms ? "2026년 7월 27일" : "2026년 8월 5일"}
+            </p>
           </header>
 
           {isTerms ? (
@@ -63,6 +65,7 @@ export function LegalPage({ kind }: LegalPageProps) {
               <Section title="1. 처리 목적과 항목">
                 <p>스튜디오 다이브(이하 "DYVE")는 회원 식별과 로그인, 공연·프로필 운영, 예매·결제·환불, 티켓 발급, 고객 문의, 부정 이용 방지와 서비스 개선을 위해 필요한 개인정보를 처리합니다.</p>
                 <p>처리 항목에는 소셜 로그인 식별자, 이메일, 휴대전화번호, 닉네임, 프로필 이미지, 선호 지역, 예매·결제·환불 내역, 문의 및 채팅 내용, 접속기록과 기기·브라우저 정보가 포함될 수 있습니다.</p>
+                <p>휴대전화번호는 가입 시 필수로 수집합니다. 소셜 로그인에서 번호가 제공되지 않거나 유효하지 않으면 가입 완료 화면에서 회원이 직접 입력합니다.</p>
                 <p>아티스트·베뉴·주최자 기능 이용 시 활동 정보, 연락처, 주소, 정산 및 사업자 증빙자료를 추가로 처리할 수 있습니다.</p>
               </Section>
               <Section title="2. 카카오 로그인으로 수집하는 정보">

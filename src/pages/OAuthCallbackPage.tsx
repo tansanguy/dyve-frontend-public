@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { LoadingIndicator } from "../components/LoadingIndicator";
 import { useAuth } from "../contexts/AuthContext";
+import { api } from "../services/api";
+import { isValidKoreanMobileNumber } from "../utils/phone";
 
 const isProvider = (value: unknown): value is "kakao" | "naver" =>
   value === "kakao" || value === "naver";
@@ -29,8 +31,21 @@ export function OAuthCallbackPage() {
     const error = searchParams.get("error");
 
     void completeOAuthLogin(provider, { code, state, redirectUri, error: error ?? undefined })
-      .then((redirectTo) => {
-        navigate(redirectTo, { replace: true });
+      .then(async (redirectTo) => {
+        const phoneRoute = `/account/phone?redirectTo=${encodeURIComponent(redirectTo)}`;
+        const me = await api.getMe().catch((error) => {
+          console.error("Failed to check phone after OAuth login", error);
+          return null;
+        });
+        if (!me) {
+          navigate(phoneRoute, { replace: true });
+          return;
+        }
+        if (isValidKoreanMobileNumber(me.accountInfo?.phoneNumber)) {
+          navigate(redirectTo, { replace: true });
+          return;
+        }
+        navigate(phoneRoute, { replace: true });
       })
       .catch((error) => {
         console.error("OAuth callback failed", error);

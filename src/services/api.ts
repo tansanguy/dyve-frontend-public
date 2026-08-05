@@ -811,6 +811,8 @@ export type GroupDiveApplicationDto = {
   confirmedAt?: string | null;
   createdAt: string;
   payments: GroupDivePaymentIntent[];
+  phoneNumber?: string | null;
+  statusOptions?: string[];
   assignment?: {
     id: string;
     status: string;

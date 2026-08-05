@@ -30,6 +30,9 @@ const MyPage = lazy(() => import("./pages/MyPage").then((module) => ({ default: 
 const OAuthCallbackPage = lazy(() =>
   import("./pages/OAuthCallbackPage").then((module) => ({ default: module.OAuthCallbackPage })),
 );
+const PhoneCollectionPage = lazy(() =>
+  import("./pages/PhoneCollectionPage").then((module) => ({ default: module.PhoneCollectionPage })),
+);
 const FavoritesPage = lazy(() =>
   import("./pages/FavoritesPage").then((module) => ({ default: module.FavoritesPage })),
 );
@@ -300,6 +303,14 @@ function App() {
         <Route
           path="/auth/callback/:provider"
           element={<RouteSuspense><OAuthCallbackPage /></RouteSuspense>}
+        />
+        <Route
+          path="/account/phone"
+          element={
+            <RequireMember>
+              <RouteSuspense><PhoneCollectionPage /></RouteSuspense>
+            </RequireMember>
+          }
         />
 
         <Route element={<MobileRouteLayout />}>

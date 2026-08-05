@@ -14,6 +14,7 @@
     "check:admin-group-dive": "node ./scripts/check-admin-group-dive.mjs",
     "check:admin-refunds": "node ./scripts/check-admin-refunds.mjs",
     "check:guest-checkout": "node ./scripts/check-guest-checkout.mjs",
+    "check:phone": "node ./scripts/check-phone-collection.mjs",
     "verify": "npm run typecheck && npm run lint && npm run build && npm run check:bundle",
     "preview": "vite preview",
     "capture:dyve": "node ./scripts/capture-dyve-screenshots.mjs",
