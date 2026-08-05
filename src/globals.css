@@ -1,0 +1,1519 @@
+/* ============================================================
+   DYVE Design System — globals.css
+   Design.md 기준 CSS 토큰 + Tailwind v4 연동
+   ============================================================ */
+
+/* ── 웹폰트 ─────────────────────────────────────────────── */
+@import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css");
+
+/* LINE Seed Sans KR — public/fonts/ */
+@font-face {
+  font-family: "LINE Seed Sans KR";
+  src: url("/fonts/LINESeedKR-Th.woff2") format("woff2");
+  font-weight: 300;
+  font-display: swap;
+}
+@font-face {
+  font-family: "LINE Seed Sans KR";
+  src: url("/fonts/LINESeedKR-Rg.woff2") format("woff2");
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: "LINE Seed Sans KR";
+  src: url("/fonts/LINESeedKR-Bd.woff2") format("woff2");
+  font-weight: 700;
+  font-display: swap;
+}
+/* 800 weight — LINE Seed Sans V1.003 XBd (영문/라틴 커버, 한글은 700 fallback) */
+@font-face {
+  font-family: "LINE Seed Sans KR";
+  src: url("/fonts/LINESeedSans_W_XBd.woff2") format("woff2");
+  font-weight: 800;
+  font-display: swap;
+}
+
+@import "tailwindcss";
+
+/* ── 모션 유틸리티 (animate-in/out, fade/zoom/slide) ─────────
+   Tailwind v4용. Radix Dialog/AlertDialog·오버레이 진입/퇴장
+   애니메이션(data-[state=open]:animate-in 등)을 실제로 빌드한다.
+   미설치 상태에서 27파일의 animate-* 47회가 no-op이던 것을 부활. */
+@import "tw-animate-css";
+
+/* ── Tailwind v4 @theme 연동 ────────────────────────────── */
+@theme {
+  /* DYVE 브랜드 폰트 */
+  --font-display: "LINE Seed Sans KR", "Pretendard Variable", "Pretendard",
+    -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --font-brand: "LINE Seed Sans KR", "Pretendard Variable", "Pretendard",
+    -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --font-sans: "Pretendard Variable", "Pretendard", -apple-system,
+    BlinkMacSystemFont, system-ui, sans-serif;
+
+  /* 색상 — Tailwind 유틸리티로 사용 가능하게 */
+  --color-canvas:          var(--color-canvas);
+  --color-surface-soft:    var(--color-surface-soft);
+  --color-surface-muted:   var(--color-surface-muted);
+  --color-surface-strong:  var(--color-surface-strong);
+  --color-surface-overlay: var(--color-surface-overlay);
+  --color-surface-scrim:   var(--color-surface-scrim);
+  --color-ink:             var(--color-ink);
+  --color-body:            var(--color-body);
+  --color-muted:           var(--color-muted);
+  --color-muted-soft:      var(--color-muted-soft);
+  --color-hairline:        var(--color-hairline);
+  --color-hairline-strong: var(--color-hairline-strong);
+  --color-disabled-surface:var(--color-disabled-surface);
+  --color-disabled-text:   var(--color-disabled-text);
+  --color-accent-pink:     var(--color-accent-pink);
+  --color-accent-bluegreen:var(--color-accent-bluegreen);
+  --color-live-mint:       var(--color-live-mint);
+  --color-club-canvas:     var(--color-club-canvas);
+
+  /* Primary */
+  --color-primary:         var(--color-primary);
+  --color-primary-strong:  var(--color-primary-strong);
+  --color-primary-active:  var(--color-primary-active);
+  --color-primary-soft:    var(--color-primary-soft);
+  --color-on-primary:      var(--color-on-primary);
+
+  /* Semantic */
+  --color-error:           var(--color-error);
+  --color-success:         var(--color-success);
+  --color-info:            var(--color-info);
+
+  /* 비가이드 Tailwind 기본 팔레트가 화면에 직접 나오지 않도록 DYVE 팔레트로 수렴 */
+  --color-white: #FFF3F3;
+  --color-black: #232323;
+
+  --color-slate-50: #FFF3F3;
+  --color-slate-100: #FFF3F3;
+  --color-slate-200: #D8D8D8;
+  --color-slate-300: #D8D8D8;
+  --color-slate-400: #CEAFBF;
+  --color-slate-500: #CEAFBF;
+  --color-slate-600: #232323;
+  --color-slate-700: #232323;
+  --color-slate-800: #232323;
+  --color-slate-900: #232323;
+  --color-gray-50: #FFF3F3;
+  --color-gray-100: #FFF3F3;
+  --color-gray-200: #D8D8D8;
+  --color-gray-300: #D8D8D8;
+  --color-gray-400: #CEAFBF;
+  --color-gray-500: #CEAFBF;
+  --color-gray-600: #232323;
+  --color-gray-700: #232323;
+  --color-gray-800: #232323;
+  --color-gray-900: #232323;
+  --color-zinc-50: #FFF3F3;
+  --color-zinc-100: #FFF3F3;
+  --color-zinc-200: #D8D8D8;
+  --color-zinc-300: #D8D8D8;
+  --color-zinc-400: #CEAFBF;
+  --color-zinc-500: #CEAFBF;
+  --color-zinc-600: #232323;
+  --color-zinc-700: #232323;
+  --color-zinc-800: #232323;
+  --color-zinc-900: #232323;
+  --color-neutral-50: #FFF3F3;
+  --color-neutral-100: #FFF3F3;
+  --color-neutral-200: #D8D8D8;
+  --color-neutral-300: #D8D8D8;
+  --color-neutral-400: #CEAFBF;
+  --color-neutral-500: #CEAFBF;
+  --color-neutral-600: #232323;
+  --color-neutral-700: #232323;
+  --color-neutral-800: #232323;
+  --color-neutral-900: #232323;
+  --color-stone-50: #FFF3F3;
+  --color-stone-100: #FFF3F3;
+  --color-stone-200: #D8D8D8;
+  --color-stone-300: #D8D8D8;
+  --color-stone-400: #CEAFBF;
+  --color-stone-500: #CEAFBF;
+  --color-stone-600: #232323;
+  --color-stone-700: #232323;
+  --color-stone-800: #232323;
+  --color-stone-900: #232323;
+
+  --color-red-50: #FFF3F3;
+  --color-red-100: #FFF3F3;
+  --color-red-200: #FF4A4A;
+  --color-red-300: #FF4A4A;
+  --color-red-400: #FF4A4A;
+  --color-red-500: #FF4A4A;
+  --color-red-600: #FF4A4A;
+  --color-red-700: #FF4A4A;
+  --color-rose-50: #FFF3F3;
+  --color-rose-100: #FFF3F3;
+  --color-rose-200: #FF4A4A;
+  --color-rose-300: #FF4A4A;
+  --color-rose-400: #FF4A4A;
+  --color-rose-500: #FF4A4A;
+  --color-rose-600: #FF4A4A;
+  --color-rose-700: #FF4A4A;
+
+  --color-orange-50: #FFF3F3;
+  --color-orange-100: #FFF3F3;
+  --color-orange-200: #CEAFBF;
+  --color-orange-300: #CEAFBF;
+  --color-orange-400: #CEAFBF;
+  --color-orange-500: #CEAFBF;
+  --color-amber-50: #FFF3F3;
+  --color-amber-100: #FFF3F3;
+  --color-amber-200: #CEAFBF;
+  --color-amber-300: #CEAFBF;
+  --color-amber-400: #CEAFBF;
+  --color-amber-500: #CEAFBF;
+  --color-yellow-50: #FFF3F3;
+  --color-yellow-100: #FFF3F3;
+  --color-yellow-200: #CEAFBF;
+  --color-yellow-300: #CEAFBF;
+  --color-yellow-400: #CEAFBF;
+  --color-yellow-500: #CEAFBF;
+
+  --color-lime-300: #CEAFBF;
+  --color-lime-400: #CEAFBF;
+  --color-lime-500: #CEAFBF;
+  --color-green-300: #CEAFBF;
+  --color-green-400: #CEAFBF;
+  --color-green-500: #CEAFBF;
+  --color-emerald-200: #CEAFBF;
+  --color-emerald-300: #CEAFBF;
+  --color-emerald-400: #CEAFBF;
+  --color-emerald-500: #CEAFBF;
+  --color-teal-300: #CEAFBF;
+  --color-teal-400: #CEAFBF;
+  --color-teal-500: #CEAFBF;
+  --color-cyan-300: #CEAFBF;
+  --color-cyan-400: #CEAFBF;
+  --color-cyan-500: #CEAFBF;
+  --color-sky-300: #CEAFBF;
+  --color-sky-400: #CEAFBF;
+  --color-sky-500: #CEAFBF;
+  --color-sky-600: #CEAFBF;
+  --color-blue-300: #CEAFBF;
+  --color-blue-400: #CEAFBF;
+  --color-blue-500: #CEAFBF;
+  --color-blue-600: #CEAFBF;
+  --color-indigo-300: #CEAFBF;
+  --color-indigo-400: #CEAFBF;
+  --color-indigo-500: #CEAFBF;
+  --color-violet-300: #CEAFBF;
+  --color-violet-400: #CEAFBF;
+  --color-violet-500: #CEAFBF;
+  --color-purple-300: #CEAFBF;
+  --color-purple-400: #CEAFBF;
+  --color-purple-500: #CEAFBF;
+  --color-fuchsia-300: #CEAFBF;
+  --color-fuchsia-400: #CEAFBF;
+  --color-fuchsia-500: #CEAFBF;
+  --color-pink-300: #CEAFBF;
+  --color-pink-400: #CEAFBF;
+  --color-pink-500: #CEAFBF;
+
+  /* 기존 shadcn 토큰 유지 */
+  --color-border:               hsl(var(--border));
+  --color-input:                hsl(var(--input));
+  --color-ring:                 hsl(var(--ring));
+  --color-background:           hsl(var(--background));
+  --color-foreground:           hsl(var(--foreground));
+  --color-primary-ui:           hsl(var(--primary));
+  --color-primary-foreground:   hsl(var(--primary-foreground));
+  --color-secondary:            hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+  --color-destructive:          hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+  --color-muted-ui:             hsl(var(--muted));
+  --color-muted-foreground:     hsl(var(--muted-foreground));
+  --color-accent:               hsl(var(--accent));
+  --color-accent-foreground:    hsl(var(--accent-foreground));
+  --color-popover:              hsl(var(--popover));
+  --color-popover-foreground:   hsl(var(--popover-foreground));
+  --color-card:                 hsl(var(--card));
+  --color-card-foreground:      hsl(var(--card-foreground));
+
+  /* Radius — shadcn */
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
+
+  /* DYVE 표준 easing — ease-standard 유틸리티로 노출 */
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* accordion 애니메이션 */
+  --animate-accordion-down: accordion-down 0.2s ease-out;
+  --animate-accordion-up:   accordion-up 0.2s ease-out;
+
+  @keyframes accordion-down {
+    from { height: 0; }
+    to   { height: var(--radix-accordion-content-height); }
+  }
+  @keyframes accordion-up {
+    from { height: var(--radix-accordion-content-height); }
+    to   { height: 0; }
+  }
+}
+
+/* ── 공통 유틸리티 ──────────────────────────────────────── */
+@utility container {
+  width: 100vw;
+  max-width: var(--mobile-shell-max-width);
+  margin-inline: auto;
+  position: relative;
+}
+
+@utility mobile-container {
+  width: 100vw;
+  max-width: var(--mobile-shell-max-width);
+  margin-inline: auto;
+  position: relative;
+}
+
+/* ── DYVE 타이포그래피 유틸리티 (Design.md) ─────────────── */
+
+/* Brand / Hero — LINE Seed Sans KR (fallback: Pretendard) */
+@utility ty-hero-display {
+  font-family: var(--font-brand);
+  font-size: 52px;
+  font-weight: 700;
+  line-height: 1.08;
+  letter-spacing: 0.01em;
+}
+@utility ty-event-title-xl {
+  font-family: var(--font-brand);
+  font-size: 44px;
+  font-weight: 700;
+  line-height: 1.10;
+  letter-spacing: 0.01em;
+}
+@utility ty-event-title-lg {
+  font-family: var(--font-brand);
+  font-size: 36px;
+  font-weight: 700;
+  line-height: 1.12;
+  letter-spacing: 0.01em;
+}
+
+@utility ty-culture-display {
+  font-family: var(--font-display);
+  font-size: 44px;
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: 0;
+}
+
+/* Pretendard — 섹션/카드 제목 */
+@utility ty-section-title {
+  font-family: var(--font-sans);
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: 0;
+}
+@utility ty-card-title {
+  font-family: var(--font-sans);
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: 0;
+}
+
+/* Body */
+@utility ty-body-lg {
+  font-family: var(--font-sans);
+  font-size: 20px;
+  font-weight: 500;
+  line-height: 1.45;
+  letter-spacing: 0;
+}
+@utility ty-body-md {
+  font-family: var(--font-sans);
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.50;
+  letter-spacing: 0;
+}
+@utility ty-body-sm {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.45;
+  letter-spacing: 0;
+}
+
+/* Caption / Micro */
+@utility ty-caption {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.35;
+  letter-spacing: 0;
+}
+@utility ty-micro {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.30;
+  letter-spacing: 0;
+}
+
+/* Button */
+@utility ty-button-lg {
+  font-family: var(--font-sans);
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.20;
+  letter-spacing: 0;
+}
+@utility ty-button-md {
+  font-family: var(--font-sans);
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: 0;
+}
+
+/* Badge */
+@utility ty-badge {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.20;
+  letter-spacing: 0;
+}
+
+/*
+  Tailwind CSS v4 border 기본색 대응
+*/
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-hairline, currentColor);
+  }
+}
+
+/* ── 모바일 쉘 유틸리티 ─────────────────────────────────── */
+@layer utilities {
+  .mobile-shell > .mobile-route-content > * {
+    display: flex;
+    min-height: 100%;
+    width: 100%;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* Pages without a direct main still need one scroll owner. */
+  .mobile-shell > .mobile-route-content > *:not(:has(> main)) {
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
+    -webkit-overflow-scrolling: touch;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .mobile-shell > .mobile-route-content > *:not(:has(> main))::-webkit-scrollbar {
+    display: none;
+  }
+
+  .mobile-shell > .mobile-route-content > * > main {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
+    -webkit-overflow-scrolling: touch;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .mobile-shell > .mobile-route-content > * > main::-webkit-scrollbar {
+    display: none;
+  }
+
+  .mobile-shell > .mobile-route-content > * > main.mobile-main-static {
+    overflow: hidden;
+  }
+
+  .mobile-shell .min-h-screen {
+    min-height: 100%;
+  }
+
+  .mobile-fixed-bar {
+    position: fixed;
+    bottom: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom));
+    left: 50%;
+    z-index: 50;
+    width: 100%;
+    max-width: var(--mobile-shell-max-width);
+    transform: translateX(-50%);
+  }
+
+  /* ── 앱 바 스타일 ── */
+  .app-top-bar {
+    background-color: var(--color-canvas);
+    border-color: var(--color-hairline);
+    backdrop-filter: blur(18px);
+  }
+
+  .app-top-bar-strong {
+    background-color: var(--color-canvas);
+    border-color: var(--color-hairline);
+  }
+
+  .app-overlay-bar {
+    background-color: color-mix(in srgb, var(--color-canvas) 72%, transparent);
+    border-color: color-mix(in srgb, var(--color-hairline) 78%, transparent);
+    backdrop-filter: blur(16px);
+  }
+
+  .app-bottom-bar {
+    background-color: var(--color-canvas);
+    border-color: var(--color-hairline);
+    backdrop-filter: blur(18px);
+  }
+
+  /* ── 스크롤바 숨김 ── */
+  .mobile-shell .no-scrollbar {
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  /* 가로 레일: 브라우저가 제스처 방향을 판별해 세로 본문 스크롤도 유지한다. */
+  .overflow-x-auto {
+    touch-action: pan-x pan-y;
+    overscroll-behavior-x: contain;
+  }
+
+  .dyve-stage-grid {
+    background-image:
+      linear-gradient(rgba(255, 243, 243, 0.08) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 243, 243, 0.08) 1px, transparent 1px);
+    background-size: 36px 36px;
+    mask-image: linear-gradient(to bottom, #232323 0%, #232323 58%, transparent 100%);
+  }
+
+  .dyve-scanline {
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(255, 74, 74, 0.08) 20%,
+      rgba(206, 175, 191, 0.42) 50%,
+      rgba(255, 74, 74, 0.08) 80%,
+      transparent 100%
+    );
+    animation: dyve-scan 3.8s ease-in-out infinite;
+  }
+
+  .dyve-float-slow {
+    animation: dyve-float 6s ease-in-out infinite;
+  }
+
+  .dyve-float-delay {
+    animation: dyve-float 7.5s ease-in-out infinite;
+    animation-delay: -2.4s;
+  }
+
+  .dyve-header-logo--red {
+    filter: brightness(0) saturate(100%) invert(47%) sepia(86%) saturate(2824%) hue-rotate(331deg) brightness(103%) contrast(101%);
+  }
+
+  .dyve-scroll-reveal {
+    --dyve-reveal-delay: 0ms;
+    --dyve-reveal-x: 0px;
+    --dyve-reveal-y: 34px;
+    --dyve-reveal-scale: 0.98;
+    opacity: 0;
+    filter: blur(7px);
+    transform: translate3d(var(--dyve-reveal-x), var(--dyve-reveal-y), 0) scale(var(--dyve-reveal-scale));
+    transition:
+      opacity 520ms ease,
+      filter 680ms ease,
+      transform 720ms cubic-bezier(0.16, 1.08, 0.28, 1);
+    transition-delay: var(--dyve-reveal-delay);
+    will-change: opacity, filter, transform;
+  }
+
+  .dyve-scroll-reveal--pop {
+    --dyve-reveal-y: 28px;
+    --dyve-reveal-scale: 0.94;
+  }
+
+  .dyve-scroll-reveal--slide-left {
+    --dyve-reveal-x: 34px;
+    --dyve-reveal-y: 14px;
+    --dyve-reveal-scale: 0.98;
+  }
+
+  .dyve-scroll-reveal--slide-right {
+    --dyve-reveal-x: -34px;
+    --dyve-reveal-y: 14px;
+    --dyve-reveal-scale: 0.98;
+  }
+
+  .dyve-scroll-reveal--fade {
+    --dyve-reveal-y: 0px;
+    --dyve-reveal-scale: 1;
+  }
+
+  .dyve-scroll-reveal[data-visible="true"] {
+    opacity: 1;
+    filter: blur(0);
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+
+  .dyve-onboarding-page {
+    color-scheme: light;
+  }
+
+  .dyve-onboarding-grid {
+    background-image:
+      linear-gradient(rgba(35, 35, 35, 0.08) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(35, 35, 35, 0.08) 1px, transparent 1px),
+      linear-gradient(135deg, rgba(255, 74, 74, 0.12), transparent 36%, rgba(206, 175, 191, 0.18));
+    background-size: 42px 42px, 42px 42px, 100% 100%;
+    mask-image: linear-gradient(to bottom, #232323 0%, #232323 68%, transparent 100%);
+  }
+
+  .dyve-brutal-display {
+    font-family: var(--font-display);
+    font-weight: 700;
+    letter-spacing: 0;
+    text-transform: uppercase;
+  }
+
+  .dyve-onboarding-logo-stage {
+    position: relative;
+    display: grid;
+    min-height: 232px;
+    place-items: center;
+    padding: 22px 0 14px;
+    isolation: isolate;
+  }
+
+  .dyve-onboarding-logo {
+    position: relative;
+    z-index: 2;
+    animation: dyve-splash-mark-reveal 1040ms cubic-bezier(0.18, 0.78, 0.16, 1) 120ms both;
+    filter: drop-shadow(0 18px 30px rgba(255, 74, 74, 0.22));
+    transform-origin: 50% 82%;
+  }
+
+  .dyve-onboarding-logo-drop {
+    position: absolute;
+    left: 50%;
+    top: 61.5%;
+    z-index: 1;
+    width: 13px;
+    height: 13px;
+    border-radius: 999px;
+    background: var(--color-primary);
+    box-shadow: 0 0 26px rgba(255, 74, 74, 0.86);
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.4);
+    animation: dyve-logo-red-dot 840ms cubic-bezier(0.18, 0.78, 0.18, 1) both;
+  }
+
+  .dyve-onboarding-logo-ripple {
+    position: absolute;
+    left: 50%;
+    top: 62%;
+    z-index: 0;
+    width: min(238px, 64vw);
+    height: 44px;
+    border: 1.25px solid rgba(255, 74, 74, 0.62);
+    border-radius: 50%;
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.48);
+    animation: dyve-logo-ripple-once 1240ms ease-out 180ms both;
+  }
+
+  .dyve-onboarding-logo-ripple--two {
+    width: min(292px, 76vw);
+    height: 58px;
+    border-color: rgba(255, 243, 243, 0.28);
+    animation-delay: 300ms;
+  }
+
+  .dyve-onboarding-logo-stage:hover .dyve-onboarding-logo {
+    animation: dyve-logo-hover-pulse 1420ms cubic-bezier(0.18, 0.78, 0.16, 1) infinite;
+  }
+
+  .dyve-onboarding-logo-stage:hover .dyve-onboarding-logo-drop {
+    animation: dyve-logo-red-dot 1180ms cubic-bezier(0.18, 0.78, 0.18, 1) infinite;
+  }
+
+  .dyve-onboarding-logo-stage:hover .dyve-onboarding-logo-ripple {
+    animation: dyve-logo-ripple-once 1380ms ease-out infinite;
+  }
+
+  .dyve-onboarding-logo-stage:hover .dyve-onboarding-logo-ripple--two {
+    animation-delay: 420ms;
+  }
+
+  .dyve-onboarding-catchphrase {
+    margin: 6px auto 0;
+    max-width: 18rem;
+    color: var(--color-on-primary);
+    font-family: var(--font-display);
+    font-size: clamp(34px, 12vw, 56px);
+    font-weight: 800;
+    letter-spacing: 0;
+    line-height: 0.98;
+    text-align: center;
+    text-shadow: 0 14px 34px rgba(255, 74, 74, 0.28);
+    word-break: keep-all;
+  }
+
+  .dyve-role-slab {
+    overflow: hidden;
+    border: 1px solid var(--color-hairline);
+    border-radius: 8px;
+    color: var(--color-ink);
+  }
+
+  .dyve-role-slab--red {
+    border-color: var(--color-primary);
+    background: var(--color-primary);
+    color: var(--color-on-primary);
+  }
+
+  .dyve-role-slab--white {
+    background: var(--color-canvas);
+    color: var(--color-ink);
+  }
+
+  .dyve-role-slab--mint {
+    background: var(--color-accent-pink);
+    color: var(--color-ink);
+  }
+
+  .dyve-persona-page {
+    color-scheme: dark;
+  }
+
+  .dyve-persona-network {
+    position: relative;
+    height: 258px;
+    margin-top: 18px;
+    isolation: isolate;
+    overflow: visible;
+    border: 0;
+    background: transparent;
+    padding: 0 18px;
+  }
+
+  .dyve-persona-network::before {
+    content: none;
+  }
+
+  .dyve-persona-network-links {
+    position: absolute;
+    inset: 15px 18px 18px;
+    z-index: 1;
+    overflow: visible;
+    pointer-events: none;
+  }
+
+  .dyve-persona-network-triangle,
+  .dyve-persona-network-plunge,
+  .dyve-persona-network-ripple-path {
+    fill: none;
+    stroke-linecap: round;
+    vector-effect: non-scaling-stroke;
+  }
+
+  .dyve-persona-network-triangle {
+    stroke: rgba(255, 243, 243, 0.18);
+    stroke-width: 1.45;
+  }
+
+  .dyve-persona-network-triangle--active {
+    stroke: rgba(255, 74, 74, 0.42);
+    stroke-width: 1.85;
+  }
+
+  .dyve-persona-network-plunge {
+    stroke: var(--color-primary);
+    stroke-dasharray: 0.2 1;
+    stroke-dashoffset: 1;
+    stroke-width: 2.8;
+    filter: drop-shadow(0 0 8px rgba(255, 74, 74, 0.62));
+    opacity: 0;
+    animation: dyve-persona-plunge-line 1500ms cubic-bezier(0.18, 0.78, 0.18, 1) 240ms 1 both;
+  }
+
+  .dyve-persona-network-ripple-path {
+    stroke: rgba(255, 74, 74, 0.72);
+    stroke-dasharray: 0.14 1;
+    stroke-dashoffset: 1;
+    stroke-width: 2.1;
+    opacity: 0;
+    filter: drop-shadow(0 0 7px rgba(255, 74, 74, 0.48));
+    animation: dyve-persona-ripple-path 1500ms cubic-bezier(0.2, 0.7, 0.18, 1) 980ms 1 both;
+  }
+
+  .dyve-persona-network-ripple-path--2 {
+    animation-delay: 1120ms;
+  }
+
+  .dyve-persona-network-drop {
+    position: absolute;
+    left: 50%;
+    top: 54%;
+    z-index: 2;
+    display: grid;
+    width: 46px;
+    height: 46px;
+    place-items: center;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+  }
+
+  .dyve-persona-network-drop-ripple {
+    position: absolute;
+    inset: 0;
+    border: 1.5px solid rgba(255, 74, 74, 0.48);
+    border-radius: 50%;
+    opacity: 0;
+    transform: scale(0.34);
+    animation: dyve-persona-center-ripple 1800ms ease-out 740ms 1 both;
+  }
+
+  .dyve-persona-network-drop-ripple--two {
+    inset: -10px;
+    border-color: rgba(255, 243, 243, 0.2);
+    animation-delay: 960ms;
+  }
+
+  .dyve-persona-network-drop-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    background: var(--color-primary);
+    box-shadow: 0 0 18px rgba(255, 74, 74, 0.72);
+    opacity: 0;
+    animation: dyve-persona-drop-dot 1200ms cubic-bezier(0.18, 0.78, 0.18, 1) 520ms 1 both;
+  }
+
+  .dyve-persona-network-node {
+    position: absolute;
+    z-index: 2;
+    display: grid;
+    justify-items: center;
+    width: 96px;
+    gap: 8px;
+    color: rgba(255, 243, 243, 0.56);
+    --persona-plunge-x: 0px;
+    --persona-plunge-y: 0px;
+  }
+
+  .dyve-persona-network-node--artist {
+    left: 50%;
+    top: 16px;
+    transform: translateX(-50%);
+    --persona-plunge-y: 14px;
+  }
+
+  .dyve-persona-network-node--audience {
+    left: clamp(20px, 14%, 120px);
+    bottom: 12px;
+    --persona-plunge-x: 12px;
+    --persona-plunge-y: -12px;
+  }
+
+  .dyve-persona-network-node--venue {
+    right: clamp(20px, 14%, 120px);
+    bottom: 12px;
+    --persona-plunge-x: -12px;
+    --persona-plunge-y: -12px;
+  }
+
+  .dyve-persona-network-icon {
+    display: grid;
+    width: 62px;
+    height: 62px;
+    place-items: center;
+    border: 1px solid rgba(255, 243, 243, 0.24);
+    border-radius: 8px;
+    background: rgba(35, 35, 35, 0.72);
+    box-shadow: 0 14px 32px rgba(0, 0, 0, 0.16);
+    transition: transform 220ms ease, background-color 220ms ease, border-color 220ms ease, opacity 220ms ease;
+  }
+
+  .dyve-persona-network-halo {
+    position: absolute;
+    top: -10px;
+    width: 82px;
+    height: 82px;
+    border: 1px solid rgba(255, 243, 243, 0.12);
+    border-radius: 50%;
+    opacity: 0.45;
+    transform: scale(0.92);
+  }
+
+  .dyve-persona-network-label {
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0;
+  }
+
+  .dyve-persona-network-node--active {
+    color: var(--color-primary);
+  }
+
+  .dyve-persona-network-node--active .dyve-persona-network-label {
+    transform: translate(var(--persona-plunge-x), var(--persona-plunge-y));
+  }
+
+  .dyve-persona-network-node--active .dyve-persona-network-icon {
+    border-color: var(--color-primary);
+    background: var(--color-primary);
+    color: var(--color-on-primary);
+    transform: translate(var(--persona-plunge-x), var(--persona-plunge-y)) scale(1.08);
+    animation:
+      dyve-persona-node-plunge 1500ms cubic-bezier(0.18, 0.78, 0.18, 1) 1 both,
+      dyve-persona-active-glow 4200ms ease-in-out 1600ms infinite;
+    box-shadow: 0 20px 42px rgba(255, 74, 74, 0.32);
+  }
+
+  .dyve-persona-network-node--active .dyve-persona-network-halo {
+    border-color: rgba(255, 74, 74, 0.42);
+    animation: dyve-persona-node-splash 1600ms ease-out 260ms 1 both;
+  }
+
+  .dyve-persona-step-card {
+    position: relative;
+    display: grid;
+    grid-template-columns: 62px minmax(0, 1fr);
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.055);
+  }
+
+  .dyve-persona-step-card::before {
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 3px;
+    background: var(--color-primary);
+    content: "";
+    opacity: 0.82;
+  }
+
+  .dyve-persona-step-card-index {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    border-right: 1px solid rgba(255, 255, 255, 0.12);
+    padding-top: 18px;
+    color: var(--color-primary);
+    font-family: var(--font-display);
+    font-size: 24px;
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  .dyve-persona-final-cta {
+    display: flex;
+    min-height: 56px;
+    width: 100%;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border-radius: 8px;
+    background: var(--color-primary);
+    color: var(--color-on-primary);
+    font-family: var(--font-brand);
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: 0;
+    transition: background-color 180ms ease, transform 180ms ease;
+  }
+
+  .dyve-persona-final-cta:hover {
+    background: var(--color-primary-active);
+    transform: translateY(-1px);
+  }
+
+  .dyve-onboarding-actions {
+    display: grid;
+    gap: 10px;
+  }
+
+  .dyve-onboarding-action,
+  .dyve-onboarding-skip,
+  .dyve-role-cta {
+    display: flex;
+    min-height: 54px;
+    width: 100%;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border-radius: 8px;
+    padding: 0 16px;
+    font-family: var(--font-brand);
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0;
+    transition: background-color 180ms ease, border-color 180ms ease, color 180ms ease, transform 180ms ease;
+  }
+
+  .dyve-onboarding-action {
+    border: 1px solid var(--color-hairline);
+    background: var(--color-canvas);
+    color: var(--color-ink);
+  }
+
+  .dyve-onboarding-action:hover {
+    border-color: var(--color-primary);
+    background: var(--color-primary-soft);
+    transform: translateY(-1px);
+  }
+
+  .dyve-onboarding-action--primary {
+    border-color: var(--color-primary);
+    background: var(--color-primary);
+    color: var(--color-on-primary);
+  }
+
+  .dyve-onboarding-action--primary:hover {
+    background: var(--color-primary-active);
+  }
+
+  .dyve-onboarding-skip {
+    min-height: 44px;
+    border: 0;
+    background: transparent;
+    color: var(--color-muted);
+  }
+
+  .dyve-onboarding-skip:hover {
+    color: var(--color-ink);
+  }
+
+  .dyve-role-cta {
+    min-height: 52px;
+    justify-content: space-between;
+    border: 0;
+    border-top: 1px solid currentColor;
+    border-radius: 0;
+    background: transparent;
+    color: currentColor;
+  }
+
+  .dyve-role-cta:hover {
+    background: color-mix(in srgb, currentColor 10%, transparent);
+  }
+
+  .dyve-backstage-panel {
+    overflow: hidden;
+    border: 1px solid var(--color-hairline);
+    border-radius: 8px;
+    background: var(--color-canvas);
+    color: var(--color-ink);
+  }
+
+  .dyve-footer-action {
+    display: flex;
+    min-height: 56px;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--color-hairline);
+    border-radius: 8px;
+    background: var(--color-canvas);
+    color: var(--color-ink);
+    padding: 0 12px;
+    font-family: var(--font-brand);
+    font-size: 14px;
+    font-weight: 700;
+    transition: background-color 180ms ease, border-color 180ms ease, transform 180ms ease;
+  }
+
+  .dyve-footer-action:hover {
+    border-color: var(--color-primary);
+    background: var(--color-primary-soft);
+    transform: translateY(-1px);
+  }
+
+  @keyframes dyve-scan {
+    0%,
+    100% {
+      transform: translateX(-42%);
+      opacity: 0;
+    }
+    22%,
+    72% {
+      opacity: 1;
+    }
+    100% {
+      transform: translateX(42%);
+    }
+  }
+
+  @keyframes dyve-float {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-8px);
+    }
+  }
+
+  @keyframes dyve-splash-mark-reveal {
+    0% {
+      opacity: 0;
+      filter: drop-shadow(0 0 0 rgba(255, 74, 74, 0));
+      transform: scale(0.88);
+    }
+    24% {
+      opacity: 0.92;
+      filter: drop-shadow(0 0 28px rgba(255, 74, 74, 0.46));
+      transform: scale(0.96);
+    }
+    42% {
+      opacity: 1;
+      filter: drop-shadow(0 0 46px rgba(255, 74, 74, 0.62));
+      transform: scale(1.055);
+    }
+    66% {
+      filter: drop-shadow(0 18px 38px rgba(255, 74, 74, 0.34));
+      transform: scale(0.99);
+    }
+    100% {
+      opacity: 1;
+      filter: drop-shadow(0 18px 30px rgba(255, 74, 74, 0.22));
+      transform: scale(1);
+    }
+  }
+
+  @keyframes dyve-logo-hover-pulse {
+    0%,
+    100% {
+      opacity: 1;
+      filter: drop-shadow(0 18px 30px rgba(255, 74, 74, 0.22));
+      transform: scale(1);
+    }
+    36% {
+      filter: drop-shadow(0 0 48px rgba(255, 74, 74, 0.62));
+      transform: scale(1.045);
+    }
+    64% {
+      filter: drop-shadow(0 18px 38px rgba(255, 74, 74, 0.34));
+      transform: scale(0.995);
+    }
+  }
+
+  @keyframes dyve-logo-red-dot {
+    0% {
+      opacity: 0;
+      transform: translate(-50%, -50%) scale(0.28);
+    }
+    22% {
+      opacity: 0.96;
+      transform: translate(-50%, -50%) scale(1.15);
+    }
+    42% {
+      opacity: 0.82;
+      transform: translate(-50%, -50%) scale(0.84, 0.42);
+    }
+    100% {
+      opacity: 0;
+      transform: translate(-50%, -50%) scale(0.48);
+    }
+  }
+
+  @keyframes dyve-logo-ripple-once {
+    0% {
+      opacity: 0;
+      transform: translate(-50%, -50%) scale(0.42);
+    }
+    22% {
+      opacity: 0.82;
+    }
+    66% {
+      opacity: 0.28;
+    }
+    100% {
+      opacity: 0;
+      transform: translate(-50%, -50%) scale(1.72);
+    }
+  }
+
+  @keyframes dyve-persona-plunge-line {
+    0% {
+      opacity: 0;
+      stroke-dashoffset: 1;
+    }
+    18%,
+    68% {
+      opacity: 1;
+    }
+    76% {
+      stroke-dashoffset: 0.12;
+    }
+    100% {
+      opacity: 0;
+      stroke-dashoffset: 0;
+    }
+  }
+
+  @keyframes dyve-persona-ripple-path {
+    0% {
+      opacity: 0;
+      stroke-dashoffset: 1;
+    }
+    16%,
+    72% {
+      opacity: 0.92;
+    }
+    100% {
+      opacity: 0;
+      stroke-dashoffset: 0;
+    }
+  }
+
+  @keyframes dyve-persona-center-ripple {
+    0% {
+      opacity: 0;
+      transform: scale(0.32);
+    }
+    26% {
+      opacity: 0.78;
+      transform: scale(0.7);
+    }
+    100% {
+      opacity: 0;
+      transform: scale(1.85);
+    }
+  }
+
+  @keyframes dyve-persona-drop-dot {
+    0% {
+      opacity: 0;
+      transform: translateY(-22px) scale(0.72);
+    }
+    48% {
+      opacity: 1;
+      transform: translateY(5px) scale(1.28, 0.74);
+    }
+    72% {
+      opacity: 0.7;
+      transform: translateY(-3px) scale(0.9, 1.12);
+    }
+    100% {
+      opacity: 0;
+      transform: translateY(0) scale(0.8);
+    }
+  }
+
+  @keyframes dyve-persona-node-plunge {
+    0% {
+      transform: translate(0, 0) scale(0.96);
+      filter: brightness(0.9);
+    }
+    38% {
+      transform: translate(calc(var(--persona-plunge-x) * 1.45), calc(var(--persona-plunge-y) * 1.45)) scale(0.9, 1.1);
+      filter: brightness(1.16);
+    }
+    56% {
+      transform: translate(var(--persona-plunge-x), var(--persona-plunge-y)) scale(1.14, 0.88);
+      filter: brightness(1.3);
+    }
+    78% {
+      transform: translate(calc(var(--persona-plunge-x) * 0.9), calc(var(--persona-plunge-y) * 0.9)) scale(1.02, 1.04);
+      filter: brightness(1.05);
+    }
+    100% {
+      transform: translate(var(--persona-plunge-x), var(--persona-plunge-y)) scale(1.08);
+      filter: brightness(1);
+    }
+  }
+
+  @keyframes dyve-persona-active-glow {
+    0%,
+    100% {
+      box-shadow: 0 20px 42px rgba(255, 74, 74, 0.28);
+    }
+    50% {
+      box-shadow: 0 24px 54px rgba(255, 74, 74, 0.42);
+    }
+  }
+
+  @keyframes dyve-persona-node-splash {
+    0% {
+      opacity: 0;
+      transform: scale(0.72);
+    }
+    36% {
+      opacity: 0.64;
+      transform: translate(var(--persona-plunge-x), var(--persona-plunge-y)) scale(1.1);
+    }
+    100% {
+      opacity: 0;
+      transform: translate(var(--persona-plunge-x), var(--persona-plunge-y)) scale(1.62);
+    }
+  }
+}
+
+/* 전역 세이프티넷: 위 온보딩/페르소나 셀렉터 외에도 animate-*,
+   페이지 트랜지션, transition-all 등 모든 모션을 무력화한다.
+   (기존 scoped 블록은 opacity/filter 복원 등 정교 처리라 함께 유지) */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dyve-scanline,
+  .dyve-float-slow,
+  .dyve-float-delay,
+  .dyve-onboarding-logo,
+  .dyve-onboarding-logo-drop,
+  .dyve-onboarding-logo-ripple,
+  .dyve-onboarding-logo-stage:hover .dyve-onboarding-logo,
+  .dyve-onboarding-logo-stage:hover .dyve-onboarding-logo-drop,
+  .dyve-onboarding-logo-stage:hover .dyve-onboarding-logo-ripple,
+  .dyve-persona-network-plunge,
+  .dyve-persona-network-ripple-path,
+  .dyve-persona-network-drop-ripple,
+  .dyve-persona-network-drop-dot,
+  .dyve-persona-network-node--active .dyve-persona-network-icon,
+  .dyve-persona-network-node--active .dyve-persona-network-halo {
+    animation: none;
+  }
+
+  .dyve-scroll-reveal {
+    opacity: 1;
+    filter: none;
+    transform: none;
+    transition: none;
+  }
+}
+
+/* ============================================================
+   :root — DYVE 디자인 토큰 (라이트 모드)
+   ============================================================ */
+:root {
+  /* ── 모바일 레이아웃 ── */
+  --mobile-shell-max-width:    min(450px, 100vw);
+  --mobile-bottom-action-height: 8rem;
+  --header-height:             4.5rem;
+  --bottom-nav-height:         5.5rem;
+
+  /* ── DYVE 색상 토큰 (Design.md) ── */
+
+  /* Primary / Brand — Design.md 복원 (5색 평탄화 회귀 되돌림) */
+  --color-primary:         #DF2A2A;  /* UI용 DYVE Red: 흰 배경/흰 글자 모두 WCAG AA */
+  --color-primary-strong:  #C62828;  /* 대형/하단 고정 CTA */
+  --color-primary-active:  #B71C1C;  /* hover/press 피드백 */
+  --color-primary-soft:    #FFF3F3;  /* Design.md: 레드 계열 연한 배경 */
+  --color-on-primary:      #FFFFFF;
+
+  /* Surface */
+  --color-canvas:          #FFFFFF;  /* Design.md: 기본 페이지 배경 */
+  --color-surface-soft:    #F3F3F3;  /* Design.md: 대형 카드/섹션 (핑크빛 #FFF3F3 → 중립 회색 복원) */
+  --color-surface-muted:   #EFEFEF;  /* Design.md: 입력창/비활성 표면 (한 단계 더 분리) */
+  --color-surface-strong:  #D8D8D8;  /* Design.md 미정의 — 유지 */
+  --color-surface-overlay: rgba(35, 35, 35, 0.08);
+  --color-surface-scrim:   rgba(35, 35, 35, 0.58);
+  --color-surface-white:   #FFFFFF;
+
+  /* Text */
+  --color-ink:             #232323;  /* Design.md: 제목/본문/버튼 외곽선 */
+  --color-body:            #333333;  /* Design.md: 긴 설명/주소/안내 (본문·제목 위계 복원) */
+  --color-muted:           #686868;  /* Design.md: 보조 설명/플레이스홀더 (대비 2:1 #CEAFBF → 5.36:1 복원, WCAG AA 충족) */
+  --color-muted-soft:      #737373;  /* disabled/보조 캡션도 흰 배경 4.5:1 이상 */
+
+  /* Border / Hairline */
+  --color-hairline:        #D8D8D8;  /* Design.md: 기본 1px 구분선 */
+  --color-hairline-strong: #AFAFAF;  /* Design.md: 중요 구분선 (강약 소멸 #D8D8D8 → 복원) */
+  --color-border-ink:      #232323;  /* Design.md: pill/outline/포커스 강한 border */
+  --color-disabled-surface:#D8D8D8;
+  --color-disabled-text:   #737373;
+
+  /* Accent */
+  --color-accent-pink:     #CEAFBF;  /* Design.md: Dust Pink — 원래부터 일치 */
+  --color-accent-bluegreen:#82B7C1;  /* Design.md: Muted Blue Green (보조 액센트 복원) */
+  --color-live-mint:       #CEAFBF;  /* Design.md 미정의 — 유지 (스펙 필요, 보고서 참고) */
+  --color-club-canvas:     #232323;
+  --color-club-panel:      #232323;
+
+  /* Semantic — 서로 구분되는 값으로 복원 (성공/정보/경고 구분 부활) */
+  --color-error:           #C62828;
+  --color-success:         #237344;
+  --color-success-soft:    #E8F5E9;  /* 2026-05 리팩토링 값: 성공 연한 배경 */
+  --color-info:            #356A74;
+  --color-warning:         #7A5700;
+  --color-warning-soft:    #FFF8E1;  /* 확정: 따뜻한 노랑, primary-soft와 구분 (Design.md #FFF3F3는 구식 스펙) */
+
+  /* ── DYVE 반경 토큰 (Design.md) ── */
+  --radius-card-lg:   16px;
+  --radius-card-md:   12px;
+  --radius-button-lg: 14px;
+  --radius-button-md: 8px;
+  --radius-pill:      9999px;
+
+  /* ── DYVE 간격 토큰 (Design.md) ── */
+  --space-xxs:    2px;
+  --space-xs:     4px;
+  --space-sm:     8px;
+  --space-md:     12px;
+  --space-base:   16px;
+  --space-lg:     24px;
+  --space-xl:     32px;
+  --space-xxl:    48px;
+  --space-section:64px;
+
+  /* ── DYVE 그림자 토큰 (Design.md) ── */
+  --shadow-card-soft:  0 8px 24px rgba(35, 35, 35, 0.04);
+  --shadow-card-hover: 0 12px 32px rgba(35, 35, 35, 0.08);
+
+  /* ── DYVE 스크림 토큰 (이미지 위 가독성) ── */
+  /* 이미지 하단 텍스트용 — 아래에서 위로 페이드 */
+  --scrim-image-bottom: linear-gradient(to top, rgba(35,35,35,0.60) 0%, rgba(35,35,35,0.30) 40%, transparent 100%);
+  /* 이미지 상단 NavHeader용 — 위에서 아래로 페이드 */
+  --scrim-image-top:    linear-gradient(to bottom, rgba(35,35,35,0.48) 0%, transparent 70%);
+  /* 이미지 전체 살짝 어둡게 (톤 보정) */
+  --scrim-overlay:      rgba(35, 35, 35, 0.20);
+  /* 캡션/인덱스 배지 배경 */
+  --scrim-caption:      rgba(35, 35, 35, 0.48);
+
+  /* ── DYVE 브랜드 글로우/알파 토큰 ──
+     primary(#FF4A4A = rgb 255,74,74)의 알파 3단계.
+     rgba(255,74,74,0.3) 하드코딩 47회 대체용 (glow/그림자). */
+  --color-primary-glow-soft:   rgba(255, 74, 74, 0.15);
+  --color-primary-glow:        rgba(255, 74, 74, 0.30);  /* 최다 사용 하드코딩값과 동일 */
+  --color-primary-glow-strong: rgba(255, 74, 74, 0.45);
+
+  /* ── DYVE 모션 토큰 ──
+     duration: Tailwind v4에 --duration-* 네임스페이스가 없어 CSS 변수로만 노출.
+     사용법: duration-[var(--duration-fast)] / transition-duration: var(--duration-base).
+     easing(--ease-standard)은 @theme에 등록되어 ease-standard 유틸리티로 사용 가능. */
+  --duration-fast: 150ms;   /* hover/색상 전환 등 즉각 피드백 */
+  --duration-base: 250ms;   /* 표준 트랜지션 (모달/드롭다운) */
+  --duration-slow: 400ms;   /* 큰 진입/시트 슬라이드 */
+  /* easing var — @theme의 ease-standard 유틸리티는 미사용 시 tree-shake되므로
+     ease-[var(--ease-standard)] 사용을 위해 plain :root에도 명시. */
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* ── z-index 레이어 스케일 (용도 문서) ──
+     z-0    : 기본 흐름
+     z-10   : 카드 내부 오버레이, sticky 헤더/CTA
+     z-20   : 드롭다운, 툴팁, 플로팅 배지
+     z-30   : 하단 네비게이션, 고정 바
+     z-40   : 바텀시트/드로어 백드롭
+     z-50   : 모달/다이얼로그 (shadcn Dialog 기본)
+     z-100  : 최상위 토스트/전역 오버레이 (체크인 성공 등)
+     임의값(z-[60] 등) 신규 추가 금지 — 위 단계 중 선택. */
+
+  /* ── shadcn 호환 HSL 토큰 (라이트) ── */
+  --color-scheme: light;
+  --background:   0 0% 100%;
+  --foreground:   220 13% 13%;      /* ink에 가깝게 조정 */
+  --card:         0 0% 95.3%;       /* ≈ F3F3F3 surface-soft */
+  --card-foreground: 220 13% 13%;
+  --popover:      0 0% 100%;
+  --popover-foreground: 220 13% 13%;
+  --primary:      0 100% 64.5%;     /* #FF4A4A */
+  --primary-foreground: 0 100% 97.6%;
+  --secondary:    0 0% 93.7%;       /* surface-muted */
+  --secondary-foreground: 220 13% 13%;
+  --muted:        0 0% 93.7%;
+  --muted-foreground: 0 0% 40.8%;
+  --accent:       0 0% 91%;
+  --accent-foreground: 220 13% 13%;
+  --destructive:  0 100% 64.5%;     /* 동일 #FF4A4A */
+  --destructive-foreground: 0 100% 97.6%;
+  --border:       0 0% 84.7%;       /* #D8D8D8 hairline */
+  --input:        0 0% 93.7%;
+  --ring:         0 100% 64.5%;
+
+  /* Featured 배지 */
+  --featured-badge-bg:         0 100% 97%;
+  --featured-badge-foreground: 0 78% 36%;
+  --featured-badge-border:     0 72% 78%;
+
+  /* Hero 영역 */
+  --hero-surface:         0 0% 100% / 0.88;
+  --hero-surface-strong:  0 0% 100%;
+  --hero-poster-shadow:   var(--shadow-card-soft);
+  --hero-image-overlay:   linear-gradient(180deg, rgba(255,243,243,0) 0%, rgba(35,35,35,0.04) 100%);
+  --hero-image-accent:    radial-gradient(circle at top right, rgba(255,74,74,0.10), transparent 34%);
+  --hero-meta-bg:         0 0% 95.3%;
+  --hero-meta-border:     0 0% 84.7%;
+  --hero-meta-muted:      0 0% 40.8%;
+  --hero-tag-bg:          0 0% 93.7%;
+  --hero-tag-border:      0 0% 84.7%;
+  --hero-tag-foreground:  220 13% 13%;
+
+  --radius: 0.5rem;
+}
+
+/* ============================================================
+   Base styles
+   ============================================================ */
+html,
+body {
+  margin: 0;
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  color-scheme: var(--color-scheme);
+  font-family: var(--font-sans);
+  transition:
+    background-color 180ms ease,
+    color 180ms ease;
+}
+
+h1 {
+  font-family: var(--font-brand);
+  letter-spacing: 0.01em;
+}
+
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+button,
+input,
+textarea,
+select,
+a {
+  letter-spacing: 0;
+}
+
+:where(a[href], button, input:not([type="hidden"]), select, textarea, [role="button"], [tabindex]:not([tabindex="-1"])):focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+[data-user-content] {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: normal;
+}
+
+:lang(ja) {
+  font-family: var(--font-sans);
+  letter-spacing: 0;
+}
