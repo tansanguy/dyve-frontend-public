@@ -63,6 +63,8 @@ type VenueProfilePrefill = {
   capacity?: string;
 };
 
+type VenueOption = VenueProfilePrefill;
+
 type GalleryEntry = { previewUrl: string; file?: File };
 type RefundPolicyForm = { mode: "full" | "partial" | "none"; daysBefore: string; cancellationFeePercent: string; description: string };
 
@@ -105,6 +107,7 @@ interface RegisterPerformanceScreenProps {
   mode?: "create" | "edit";
   submitLabel?: string;
   venueProfile?: VenueProfilePrefill | null;
+  venueOptions?: VenueOption[];
   viewerProfileType?: "artist" | "venue" | null;
   isMatchedFromChat?: boolean;
 }
@@ -129,6 +132,7 @@ export function RegisterPerformanceScreen({
   mode = "create",
   submitLabel,
   venueProfile = null,
+  venueOptions = [],
   viewerProfileType = null,
   isMatchedFromChat = false,
 }: RegisterPerformanceScreenProps) {
@@ -145,6 +149,11 @@ export function RegisterPerformanceScreen({
   const [venue, setVenue] = useState("");
   const [address, setAddress] = useState("");
   const [detailAddress, setDetailAddress] = useState("");
+  const [selectedVenueProfileId, setSelectedVenueProfileId] = useState("");
+  const [doorSalesEnabled, setDoorSalesEnabled] = useState(false);
+  const [doorPrice, setDoorPrice] = useState("");
+  const [doorSaleStartAt, setDoorSaleStartAt] = useState("");
+  const [doorSaleEndAt, setDoorSaleEndAt] = useState("");
   const [runtimeMinutes, setRuntimeMinutes] = useState("");
   const [entryOffsetMinutes, setEntryOffsetMinutes] = useState(30);
   const [isAlwaysEntry, setIsAlwaysEntry] = useState(false);
@@ -319,6 +328,11 @@ export function RegisterPerformanceScreen({
     setVenue(nextState.venue);
     setAddress(nextState.address);
     setDetailAddress(nextState.detailAddress);
+    setSelectedVenueProfileId(initialData.venueProfileId ?? "");
+    setDoorSalesEnabled(initialData.doorSalesEnabled === true);
+    setDoorPrice(initialData.doorPrice == null ? "" : String(initialData.doorPrice));
+    setDoorSaleStartAt(initialData.doorSaleStartAt ? toLocalDateTimeInput(new Date(initialData.doorSaleStartAt)) : "");
+    setDoorSaleEndAt(initialData.doorSaleEndAt ? toLocalDateTimeInput(new Date(initialData.doorSaleEndAt)) : "");
     setGalleryEntries(
       Array.isArray(initialData.gallery)
         ? initialData.gallery.filter((url): url is string => typeof url === "string" && url.trim().length > 0).map((previewUrl) => ({ previewUrl }))
@@ -373,6 +387,12 @@ export function RegisterPerformanceScreen({
       })) ?? [{ ...EMPTY_REFUND_POLICY }],
     );
   }, [initialData]);
+
+  useEffect(() => {
+    if (!isEditMode && !selectedVenueProfileId && venueProfile?.id) {
+      setSelectedVenueProfileId(venueProfile.id);
+    }
+  }, [isEditMode, selectedVenueProfileId, venueProfile]);
 
   useEffect(() => {
     if (!isFundingDeadlinePickerOpen) return;
@@ -618,6 +638,23 @@ export function RegisterPerformanceScreen({
     if (!trimmedAddress) {
       setFormError("공연장 주소를 입력해 주세요.");
       return;
+    }
+    if (!isEditMode && doorSalesEnabled) {
+      const parsedDoorPrice = Number(doorPrice);
+      const start = new Date(doorSaleStartAt);
+      const end = new Date(doorSaleEndAt);
+      if (!selectedVenueProfileId) {
+        setFormError("현매를 사용하려면 DYVE 업장을 선택해 주세요.");
+        return;
+      }
+      if (!Number.isInteger(parsedDoorPrice) || parsedDoorPrice < 0) {
+        setFormError("현매가를 0원 이상으로 입력해 주세요.");
+        return;
+      }
+      if (!doorSaleStartAt || !doorSaleEndAt || start >= end) {
+        setFormError("현매 판매 시작과 종료 시간을 확인해 주세요.");
+        return;
+      }
     }
     if (!Number.isFinite(parsedRuntimeMinutes) || parsedRuntimeMinutes <= 0) {
       setFormError("러닝타임을 숫자(분)로 입력해 주세요.");
@@ -871,6 +908,15 @@ export function RegisterPerformanceScreen({
       funding: fundingPayload,
       refundPolicies: normalizedRefundPolicies,
     });
+    if (!isEditMode && selectedVenueProfileId) {
+      payload.append("venueProfileId", selectedVenueProfileId);
+      payload.append("doorSalesEnabled", String(doorSalesEnabled));
+      if (doorSalesEnabled) {
+        payload.append("doorPrice", doorPrice);
+        payload.append("doorSaleStartAt", new Date(doorSaleStartAt).toISOString());
+        payload.append("doorSaleEndAt", new Date(doorSaleEndAt).toISOString());
+      }
+    }
 
     onSubmit({
       eventPayload: payload,
@@ -1255,6 +1301,7 @@ export function RegisterPerformanceScreen({
             </div>
 
             <div className="space-y-2">
+              {!isEditMode && venueOptions.length > 0 && <div className="space-y-3 rounded-2xl border border-[var(--color-hairline)] bg-[var(--color-surface-soft)] p-4"><div><Label className="text-xs font-bold uppercase tracking-[0.04em] text-[var(--color-primary)]">DYVE 업장 연결</Label><p className="mt-1 break-keep text-xs text-[var(--color-muted)]">외부 업장을 선택하면 업장 승인 후 입장 운영과 현매가 열립니다.</p></div><select value={selectedVenueProfileId} onChange={(event) => { const id = event.target.value; setSelectedVenueProfileId(id); const selected = venueOptions.find((item) => item.id === id); if (selected) { setVenue(selected.name); setAddress(selected.address ?? ""); setDetailAddress(selected.detailAddress ?? ""); if (selected.capacity) setCapacity(String(selected.capacity)); } }} className="h-12 w-full rounded-xl border border-[var(--color-hairline)] bg-[var(--color-canvas)] px-3 text-sm"><option value="">업장 연결 안 함</option>{venueOptions.map((item) => <option key={item.id} value={item.id}>{item.name}{item.address ? ` · ${item.address}` : ""}</option>)}</select>{selectedVenueProfileId && <div className="space-y-3 border-t border-[var(--color-hairline)] pt-3"><label className="flex items-center gap-2 text-sm font-bold"><input type="checkbox" checked={doorSalesEnabled} onChange={(event) => setDoorSalesEnabled(event.target.checked)} /> 현매 판매를 업장에 요청</label>{doorSalesEnabled && <><PriceInput value={doorPrice} onChange={setDoorPrice} placeholder="현매가" /><div className="grid grid-cols-1 gap-2 min-[390px]:grid-cols-2"><label className="text-xs text-[var(--color-muted)]">판매 시작<input type="datetime-local" value={doorSaleStartAt} onChange={(event) => setDoorSaleStartAt(event.target.value)} className="mt-1 h-11 w-full rounded-xl border border-[var(--color-hairline)] bg-[var(--color-canvas)] px-2 text-sm text-[var(--color-ink)]" /></label><label className="text-xs text-[var(--color-muted)]">판매 종료<input type="datetime-local" value={doorSaleEndAt} onChange={(event) => setDoorSaleEndAt(event.target.value)} className="mt-1 h-11 w-full rounded-xl border border-[var(--color-hairline)] bg-[var(--color-canvas)] px-2 text-sm text-[var(--color-ink)]" /></label></div></>}</div>}</div>}
               <div className="flex items-center justify-between border-y border-[var(--color-hairline)] py-3">
                 <div className="space-y-1">
                   <Label className="pl-1 text-xs font-bold uppercase tracking-[0.04em] text-[var(--color-primary)]">베뉴 프로필 자동 불러오기</Label>

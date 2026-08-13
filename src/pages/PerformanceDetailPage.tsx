@@ -73,6 +73,7 @@ export function PerformanceDetailPage() {
     message?: string | null;
     sourceTableOptionId?: string | null;
   } | null>(null);
+  const [doorSaleAvailable, setDoorSaleAvailable] = useState(false);
 
   const baseSoldOut =
     event?.admissionType === "standing"
@@ -156,6 +157,15 @@ export function PerformanceDetailPage() {
       cancelled = true;
     };
   }, [id, isMember]);
+
+  useEffect(() => {
+    if (!id) return;
+    const controller = new AbortController();
+    api.getDoorOffer(id, controller.signal)
+      .then((offer) => setDoorSaleAvailable(offer.available))
+      .catch(() => setDoorSaleAvailable(false));
+    return () => controller.abort();
+  }, [id]);
 
 
   useEffect(() => {
@@ -390,6 +400,8 @@ export function PerformanceDetailPage() {
         }}
         onBack={() => navigate(-1)}
         onBook={() => navigate(`/checkout/${event.id}`, { state: { event } })}
+        doorSaleAvailable={doorSaleAvailable}
+        onDoorSale={() => navigate(`/events/${event.id}/door-sale`)}
         isLiked={isLiked}
         likeCount={likeCount}
         onToggleLike={isMember ? async () => {

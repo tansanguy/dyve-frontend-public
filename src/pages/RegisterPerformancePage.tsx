@@ -34,6 +34,13 @@ export function RegisterPerformancePage() {
     detailAddress?: string;
     capacity?: string;
   } | null>(null);
+  const [venueOptions, setVenueOptions] = useState<Array<{
+    id: string;
+    name: string;
+    address?: string;
+    detailAddress?: string;
+    capacity?: string;
+  }>>([]);
   const [initialChecklist, setInitialChecklist] = useState<PerformanceChecklistRecord | null>(null);
   const [createdEventId, setCreatedEventId] = useState<string | null>(null);
   const [initialData, setInitialData] = useState<any | null>(
@@ -50,6 +57,7 @@ export function RegisterPerformancePage() {
       setHostProfileId(null);
       setViewerProfileType(null);
       setVenueProfile(null);
+      setVenueOptions([]);
       return;
     }
     const controller = new AbortController();
@@ -68,6 +76,22 @@ export function RegisterPerformancePage() {
         const resolved = resolveMeProfile(me);
         setHostProfileId(resolved.profileType ? resolved.profileId : null);
         setViewerProfileType(resolved.profileType);
+        try {
+          const venueList = await api.listProfiles({ type: "venue", limit: 200 }, controller.signal, true);
+          setVenueOptions(venueList.data.map((item) => {
+            const mapped = mapProfileToUi(item);
+            return {
+              id: mapped.id,
+              name: mapped.name,
+              address: mapped.address || mapped.subtitle || undefined,
+              detailAddress: mapped.detailAddress,
+              capacity: mapped.capacity || undefined,
+            };
+          }).filter((item) => item.id && item.name));
+        } catch (error) {
+          if (isAbortError(error, controller.signal)) return;
+          setVenueOptions([]);
+        }
 
         let venueProfileId =
           typeof meRecord.venueProfileId === "string" && meRecord.venueProfileId.trim()
@@ -328,6 +352,7 @@ export function RegisterPerformancePage() {
           isSubmitting={isSubmitting}
           submitError={submitError ?? eventLoadError}
           venueProfile={venueProfile}
+          venueOptions={venueOptions}
           viewerProfileType={viewerProfileType}
           isMatchedFromChat={isMatchedFromChat}
         />

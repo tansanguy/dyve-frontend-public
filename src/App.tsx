@@ -83,6 +83,11 @@ const InquiryPage = lazy(() => import("./pages/InquiryPage").then((module) => ({
 const LegalPage = lazy(() => import("./pages/LegalPage").then((module) => ({ default: module.LegalPage })));
 const ChatDetailPage = lazy(() => import("./pages/ChatDetailPage").then((module) => ({ default: module.ChatDetailPage })));
 const QrCheckinPage = lazy(() => import("./pages/QrCheckinPage").then((module) => ({ default: module.QrCheckinPage })));
+const EventGuestListPage = lazy(() => import("./pages/EventGuestListPage").then((module) => ({ default: module.EventGuestListPage })));
+const GuestPassPage = lazy(() => import("./pages/GuestPassPage").then((module) => ({ default: module.GuestPassPage })));
+const DoorSaleCheckoutPage = lazy(() => import("./pages/DoorSaleCheckoutPage").then((module) => ({ default: module.DoorSaleCheckoutPage })));
+const DoorPassPage = lazy(() => import("./pages/DoorPassPage").then((module) => ({ default: module.DoorPassPage })));
+const EventAccessInvitePage = lazy(() => import("./pages/EventAccessInvitePage").then((module) => ({ default: module.EventAccessInvitePage })));
 const AudienceCheckinPage = lazy(() => import("./pages/AudienceCheckinPage").then((module) => ({ default: module.AudienceCheckinPage })));
 const RegisterPerformancePage = lazy(() =>
   import("./pages/RegisterPerformancePage").then((module) => ({ default: module.RegisterPerformancePage })),
@@ -328,6 +333,21 @@ function App() {
           <Route path="/my/liked-venues" element={<Navigate to="/favorites?tab=venues" replace />} />
           <Route path="/performance/:id" element={<RouteSuspense><PerformanceDetailPage /></RouteSuspense>} />
           <Route path="/events/:id" element={<RouteSuspense><PerformanceDetailPage /></RouteSuspense>} />
+          <Route path="/invite/:token" element={<RouteSuspense><GuestPassPage /></RouteSuspense>} />
+          <Route path="/events/:eventId/door-sale" element={<RouteSuspense><DoorSaleCheckoutPage /></RouteSuspense>} />
+          <Route path="/door-pass/:token" element={<RouteSuspense><DoorPassPage /></RouteSuspense>} />
+          <Route path="/access-invite/:token" element={<RequireMember title="행사 운영 초대" description="스태프 또는 프로모터 권한을 연결하려면 로그인해 주세요."><RouteSuspense><EventAccessInvitePage /></RouteSuspense></RequireMember>} />
+          <Route
+            path="/events/:eventId/guests"
+            element={
+              <RequireMember
+                title="입장 운영은 로그인이 필요해요"
+                description="게스트 명단과 입장 현황을 관리하려면 먼저 로그인해 주세요."
+              >
+                <RouteSuspense><EventGuestListPage /></RouteSuspense>
+              </RequireMember>
+            }
+          />
           <Route
             path="/events/:eventId/checklist"
             element={

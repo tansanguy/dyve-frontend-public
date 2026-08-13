@@ -14,6 +14,7 @@ interface TicketDetailScreenProps {
     image: string;
     dateDisplay: string;
     venue: string;
+    venueIdCheckPolicy?: "unset" | "manual_required" | "not_required";
     admissionType?: "assigned" | "standing" | "open" | "table" | null;
     tableLabel?: string | null;
     tableSeatSummary?: string | null;
@@ -230,6 +231,7 @@ export function TicketDetailScreen({ tickets, initialIndex = 0, onBack }: Ticket
                                 <p className="text-lg font-bold text-black">{tIsCheckedIn ? "입장이 확인되었습니다" : hasQrData ? "입장 확인용 QR" : "QR 발급 대기"}</p>
                                 <p className="text-sm text-[var(--color-muted)]">{tIsCheckedIn ? "재입장 시에도 이 QR을 보여주세요." : hasQrData ? "입장 시 직원에게 이 화면을 보여주세요." : "티켓 QR이 아직 발급되지 않았습니다."}</p>
                             </div>
+                            {t.venueIdCheckPolicy === "manual_required" && <div className="mt-4 w-full space-y-1 rounded-xl bg-[var(--color-warning-soft)] p-3 text-left text-xs text-[var(--color-body)]"><p className="break-keep">이 행사는 업장이 현장에서 실물 신분증을 직접 확인합니다.</p><p className="break-keep">신분증을 지참해 주세요.</p><p className="break-keep">DYVE는 신분증 정보를 수집하거나 인증하지 않습니다.</p></div>}
                             <div className="mt-5 w-full rounded-xl bg-[var(--color-surface-soft)] px-4 py-3 text-center">
                               <p className="text-xs font-bold text-[var(--color-muted)]">티켓 ID</p>
                               <p className="mt-1 font-mono text-3xl font-bold tabular-nums tracking-[0.14em] text-black">

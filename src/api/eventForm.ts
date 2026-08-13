@@ -35,6 +35,11 @@ export type InitialPerformanceData = {
   venue?: string;
   address?: string;
   detailAddress?: string;
+  venueProfileId?: string | null;
+  doorSalesEnabled?: boolean;
+  doorPrice?: number | string | null;
+  doorSaleStartAt?: string | null;
+  doorSaleEndAt?: string | null;
   genre?: string;
   category?: string;
   runtimeInfo?: string;

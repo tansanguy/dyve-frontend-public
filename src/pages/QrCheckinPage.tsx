@@ -1,14 +1,13 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { LoadingIndicator } from "../components/LoadingIndicator";
 import { DyveIcon } from "../components/figma/dyve/DyveIcon";
 import { NavHeader } from "../components/figma/dyve/NavHeader";
-import { api, ApiRequestError, formatApiError } from "../services/api";
+import { api, ApiRequestError, formatApiError, type GuestEntryDto } from "../services/api";
 import { useAuth } from "../contexts/AuthContext";
 import { formatDateDisplay } from "../utils/formatters";
 import { DyveImage } from "../components/figma/dyve/DyveImage";
 import { QrScanner } from "../components/figma/dyve/QrScanner";
-import { isAdminUser } from "../utils/auth";
 
 type CheckinEvent = {
   id: string;
@@ -22,7 +21,14 @@ type CheckinEvent = {
 
 type TicketInfo = Record<string, unknown>;
 type ApiErrorDetails = Record<string, unknown>;
-type CheckinCredential = { qr: string } | { ticketNumber: string };
+type CheckinCredential = {
+  qr?: string;
+  ticketNumber?: string;
+  guestEntryId?: string;
+  doorSaleId?: string;
+  quantity?: number;
+  capacityOverrideReason?: string;
+};
 
 const resolveEvent = (event: Record<string, unknown>): CheckinEvent => {
   const id = String(
@@ -99,6 +105,16 @@ const resolveScanError = (error: unknown) => {
         return "이미 입장 처리된 티켓입니다.";
       case "TICKET_CANCELLED":
         return "취소된 티켓입니다.";
+      case "GUEST_ENTRY_CANCELLED":
+        return "취소된 초대입니다.";
+      case "DOOR_SALE_VOIDED":
+        return "취소된 현매입니다.";
+      case "PAYMENT_REQUIRED":
+        return "결제가 완료되지 않은 현매입니다.";
+      case "VENUE_ID_CHECK_POLICY_REQUIRED":
+        return "업장 운영 화면에서 현장 신분증 검사 정책을 먼저 설정해 주세요.";
+      case "CAPACITY_REACHED":
+        return "행사 정원에 도달했습니다.";
       case "INTERNAL_ERROR":
         return "서버 오류가 발생했어요. 잠시 후 다시 시도해 주세요.";
       default:
@@ -160,7 +176,8 @@ const speakError = (message: string) => {
 
 export function QrCheckinPage() {
   const navigate = useNavigate();
-  const { isMember, user } = useAuth();
+  const [searchParams] = useSearchParams();
+  const { isMember } = useAuth();
   const [events, setEvents] = useState<CheckinEvent[]>([]);
   const [eventsError, setEventsError] = useState<string | null>(null);
   const [isLoadingEvents, setIsLoadingEvents] = useState(true);
@@ -176,6 +193,13 @@ export function QrCheckinPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showFlash, setShowFlash] = useState<"success" | "error" | null>(null);
   const [showTicketInput, setShowTicketInput] = useState(false);
+  const [showGuestSearch, setShowGuestSearch] = useState(false);
+  const [guestQuery, setGuestQuery] = useState("");
+  const [guestResults, setGuestResults] = useState<GuestEntryDto[]>([]);
+  const [guestQuantities, setGuestQuantities] = useState<Record<string, number>>({});
+  const [pendingCredential, setPendingCredential] = useState<CheckinCredential | null>(null);
+  const [pendingAction, setPendingAction] = useState<"capacity" | null>(null);
+  const [capacityReason, setCapacityReason] = useState("");
 
   useEffect(() => {
     if (!isMember) {
@@ -190,31 +214,13 @@ export function QrCheckinPage() {
         setIsLoadingEvents(true);
         setEventsError(null);
         setIsAuthorized(null);
-        const me = await api.getMe(controller.signal);
-        const meRecord = me as Record<string, unknown>;
-        const role = typeof meRecord.role === "string" ? meRecord.role : "";
-        const profileType = typeof meRecord.type === "string" ? meRecord.type : "";
-        const hasVenueProfile = Boolean(meRecord.hasVenueProfile || meRecord.venueProfileId);
-        const canCheckin =
-          isAdminUser(user) ||
-          role === "admin" ||
-          role === "venue" ||
-          role === "staff" ||
-          profileType === "venue" ||
-          hasVenueProfile;
-        if (!canCheckin) {
-          setIsAuthorized(false);
-          setEvents([]);
-          setEventsError("해당 기능은 베뉴/스태프 전용입니다.");
-          return;
-        }
-        setIsAuthorized(true);
         const response = await api.listCheckinEvents({ limit: 50 }, controller.signal);
         const data = Array.isArray(response.data) ? response.data : [];
         const resolved = data
           .map((item) => resolveEvent(item as Record<string, unknown>))
           .filter((item) => item.id);
         setEvents(resolved);
+        setIsAuthorized(true);
       } catch (error) {
         const isAbortError =
           controller.signal.aborted ||
@@ -232,7 +238,14 @@ export function QrCheckinPage() {
     };
     void loadEvents();
     return () => controller.abort();
-  }, [isMember, user]);
+  }, [isMember]);
+
+  useEffect(() => {
+    const requestedId = searchParams.get("event");
+    if (!requestedId || selectedEvent) return;
+    const requested = events.find((item) => item.id === requestedId);
+    if (requested) setSelectedEvent(requested);
+  }, [events, searchParams, selectedEvent]);
 
   const today = useMemo(() => new Date(), []);
   const todayEvents = useMemo(
@@ -265,8 +278,8 @@ export function QrCheckinPage() {
     try {
       const response = await api.getEventCheckinStatus(eventId) as Record<string, unknown>;
       setEntryStats({
-        total: Number(response.totalTickets ?? 0),
-        checkedIn: Number(response.checkedInTickets ?? 0),
+        total: Number(response.totalExpected ?? response.totalTickets ?? 0),
+        checkedIn: Number(response.checkedInPeople ?? response.checkedInTickets ?? 0),
       });
     } catch (error) {
       console.error("Failed to load checkin status", error);
@@ -275,11 +288,29 @@ export function QrCheckinPage() {
 
   useEffect(() => {
     if (selectedEvent) {
-      loadCheckinStatus(selectedEvent.id);
+      void loadCheckinStatus(selectedEvent.id);
+      const timer = window.setInterval(() => void loadCheckinStatus(selectedEvent.id), 5000);
+      return () => window.clearInterval(timer);
     } else {
       setEntryStats({ total: 0, checkedIn: 0 });
     }
   }, [selectedEvent, loadCheckinStatus]);
+
+  useEffect(() => {
+    if (!selectedEvent || !showGuestSearch) return;
+    const controller = new AbortController();
+    const timer = window.setTimeout(() => {
+      api.listGuestEntries(selectedEvent.id, guestQuery, controller.signal)
+        .then((response) => setGuestResults(response.data.filter((entry) => entry.status === "active")))
+        .catch((error) => {
+          if (!controller.signal.aborted) setScanMessage(formatApiError(error, "게스트 명단을 불러오지 못했어요."));
+        });
+    }, 200);
+    return () => {
+      window.clearTimeout(timer);
+      controller.abort();
+    };
+  }, [guestQuery, selectedEvent, showGuestSearch]);
 
   const handleCheckin = useCallback(
     async (credential: CheckinCredential) => {
@@ -289,6 +320,8 @@ export function QrCheckinPage() {
       setScanStatus("idle");
       setScanMessage(null);
       setTicketInfo(null);
+      setPendingCredential(null);
+      setPendingAction(null);
       try {
         const response = await api.scanCheckin({
           eventId: selectedEvent.id,
@@ -299,6 +332,9 @@ export function QrCheckinPage() {
         setScanStatus("success");
         setScanMessage(isReentry ? "재입장 완료" : "입장 완료");
         setTicketInfo(resolved);
+        if (resolved?.credentialType === "guest") {
+          setGuestResults((current) => current.map((item) => item.id === resolved.guestEntryId ? { ...item, ...(resolved as Partial<GuestEntryDto>) } : item));
+        }
         const seat = (resolved?.seat as string | undefined) ?? (resolved?.seatNumber as string | undefined) ?? "";
         const type = (resolved?.admissionType as string | undefined) ?? (resolved?.type as string | undefined) ?? "";
         if (isReentry) {
@@ -317,6 +353,10 @@ export function QrCheckinPage() {
         setScanStatus("error");
         const errorMessage = resolveScanError(error);
         setScanMessage(errorMessage);
+        if (error instanceof ApiRequestError && error.code === "CAPACITY_REACHED") {
+          setPendingCredential(credential);
+          setPendingAction("capacity");
+        }
         speakError(errorMessage);
         
         // Error Vibration
@@ -350,17 +390,26 @@ export function QrCheckinPage() {
     (ticketRecord.holderName as string | undefined) ??
     (ticketRecord.ownerName as string | undefined) ??
     (ticketRecord.name as string | undefined) ??
+    (ticketRecord.credentialType === "doorSale" ? `현매 ${Number(ticketRecord.partySize ?? 1)}명` : undefined) ??
     "";
   const ticketSeat =
     (ticketRecord.seat as string | undefined) ??
     (ticketRecord.seatNumber as string | undefined) ??
+    (typeof ticketRecord.partySize === "number" ? `${ticketRecord.checkedInCount}/${ticketRecord.partySize}명` : undefined) ??
     "";
   const ticketType =
     (ticketRecord.admissionType as string | undefined) ??
     (ticketRecord.type as string | undefined) ??
+    (ticketRecord.tier as string | undefined) ??
+    (ticketRecord.credentialType === "doorSale"
+      ? ticketRecord.channel === "dyve" ? "DYVE 현매" : ticketRecord.channel === "free" ? "무료·관계자" : "외부 현매"
+      : undefined) ??
     "";
-  const ticketNumber = (ticketRecord.ticketNumber as string | undefined) ?? "";
+  const ticketNumber =
+    (ticketRecord.ticketNumber as string | undefined) ??
+    (typeof ticketRecord.doorSaleId === "string" ? ticketRecord.doorSaleId.slice(0, 8).toUpperCase() : "");
   const isReentry = ticketRecord.isReentry === true;
+  const isOverCapacity = ticketRecord.overCapacity === true;
   const ticketStatus =
     (ticketRecord.status as string | undefined) ??
     (ticketRecord.checkinStatus as string | undefined) ??
@@ -383,6 +432,7 @@ export function QrCheckinPage() {
              {ticketSeat || "자율입장"}
            </p>
            <p className="mt-8 text-xl font-bold opacity-80">{isReentry ? "재입장 확인 완료" : "입장 확인 완료"}</p>
+           {isOverCapacity && <p className="mt-3 rounded-full bg-black/15 px-4 py-2 text-sm font-bold">정원 초과 입장 기록됨</p>}
         </div>
       )}
       {showFlash === "error" && (
@@ -524,15 +574,16 @@ export function QrCheckinPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-3 gap-2">
               <button
                 onClick={() => {
                   setScannerActive(true);
                   setShowTicketInput(false);
+                  setShowGuestSearch(false);
                   resetScanState();
                 }}
                 className={`flex flex-col items-center justify-center gap-2 rounded-2xl py-4 transition-all ${
-                  scannerActive && !showTicketInput
+                  scannerActive && !showTicketInput && !showGuestSearch
                     ? "bg-[var(--color-primary)] text-[var(--color-on-primary)] shadow-[0_0_20px_rgba(255,74,74,0.3)]"
                     : "border border-[var(--color-hairline)] bg-[var(--color-surface-soft)] text-[var(--color-muted)]"
                 }`}
@@ -544,6 +595,7 @@ export function QrCheckinPage() {
                 onClick={() => {
                   setScannerActive(false);
                   setShowTicketInput(true);
+                  setShowGuestSearch(false);
                   resetScanState();
                 }}
                 className={`flex flex-col items-center justify-center gap-2 rounded-2xl py-4 transition-all ${
@@ -554,6 +606,18 @@ export function QrCheckinPage() {
               >
                 <DyveIcon name="ticket-issued" size="lg" className="h-6 w-6" />
                 <span className="font-sans text-xs font-bold">TICKET ID</span>
+              </button>
+              <button
+                onClick={() => {
+                  setScannerActive(false);
+                  setShowTicketInput(false);
+                  setShowGuestSearch(true);
+                  resetScanState();
+                }}
+                className={`flex flex-col items-center justify-center gap-2 rounded-2xl py-4 transition-all ${showGuestSearch ? "bg-[var(--color-primary)] text-[var(--color-on-primary)]" : "border border-[var(--color-hairline)] bg-[var(--color-surface-soft)] text-[var(--color-muted)]"}`}
+              >
+                <DyveIcon name="search" size="lg" className="h-6 w-6" />
+                <span className="font-sans text-xs font-bold">이름 검색</span>
               </button>
             </div>
 
@@ -605,6 +669,28 @@ export function QrCheckinPage() {
               </div>
             )}
 
+            {showGuestSearch && (
+              <div className="space-y-3 rounded-2xl border border-[var(--color-hairline)] bg-[var(--color-surface-overlay)] p-4">
+                <input value={guestQuery} onChange={(event) => setGuestQuery(event.target.value)} autoFocus placeholder="이름 또는 전화번호 뒤 4자리" className="h-12 w-full rounded-xl border border-[var(--color-hairline-strong)] bg-[var(--color-surface-strong)] px-3 text-sm outline-none focus:ring-2 focus:ring-[var(--color-primary)]" />
+                <div className="max-h-80 space-y-2 overflow-y-auto">
+                  {guestResults.map((guest) => {
+                    const amount = guestQuantities[guest.id] ?? Math.max(1, guest.remainingCount);
+                    return (
+                      <div key={guest.id} className="rounded-xl border border-[var(--color-hairline)] bg-[var(--color-surface-soft)] p-3">
+                        <p className="font-bold">{guest.name} <span className="text-xs text-[var(--color-primary)]">{guest.tier.toUpperCase()}</span></p>
+                        <p className="break-keep text-xs text-[var(--color-muted)]">{guest.listName} · {guest.checkedInCount}/{guest.partySize}명 입장{guest.note ? ` · ${guest.note}` : ""}</p>
+                        <div className="mt-3 flex gap-2">
+                          <input type="number" min={1} max={Math.max(1, guest.remainingCount)} disabled={guest.remainingCount === 0} value={amount} onChange={(event) => setGuestQuantities((current) => ({ ...current, [guest.id]: Number(event.target.value) }))} aria-label={`${guest.name} 입장 인원`} className="h-10 w-20 rounded-lg border border-[var(--color-hairline)] bg-[var(--color-canvas)] px-2 text-center" />
+                          <button onClick={() => void handleCheckin({ guestEntryId: guest.id, quantity: amount })} disabled={isSubmitting} className="h-10 flex-1 rounded-lg bg-[var(--color-ink)] text-sm font-bold text-[var(--color-canvas)]">{guest.remainingCount === 0 ? "재입장 확인" : `${amount}명 입장`}</button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                  {guestResults.length === 0 && <p className="py-5 text-center text-sm text-[var(--color-muted)]">검색 결과가 없어요.</p>}
+                </div>
+              </div>
+            )}
+
             {scanMessage && (
               <div
                 className={`flex items-center gap-2 rounded-xl border px-3 py-2 text-xs ${
@@ -621,15 +707,22 @@ export function QrCheckinPage() {
                 {scanMessage}
               </div>
             )}
+            {pendingCredential && pendingAction === "capacity" && (
+              <div className="space-y-2 rounded-xl border border-[var(--color-warning)]/40 bg-[var(--color-warning)]/10 p-3">
+                <input value={capacityReason} onChange={(event) => setCapacityReason(event.target.value)} placeholder="정원 초과 승인 사유" className="h-11 w-full rounded-lg border border-[var(--color-hairline)] bg-[var(--color-canvas)] px-3 text-sm" />
+                <button onClick={() => void handleCheckin({ ...pendingCredential, capacityOverrideReason: capacityReason })} disabled={scanLocked || isSubmitting || !capacityReason.trim()} className="h-11 w-full rounded-lg bg-[var(--color-warning)] font-bold text-black disabled:opacity-50">관리자 승인으로 입장</button>
+              </div>
+            )}
 
             {ticketInfo && (
               <div className="rounded-2xl border border-[var(--color-hairline)] bg-[var(--color-surface-overlay)] p-4 text-sm text-[var(--color-body)]">
-                <p className="mb-3 text-xs text-[var(--color-muted-soft)]">티켓 정보</p>
+                <p className="mb-3 text-xs text-[var(--color-muted-soft)]">입장 정보</p>
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-[var(--color-muted-soft)]">이름</span>
                     <span className="font-semibold text-[var(--color-ink)]">{ticketName || "정보 없음"}</span>
                   </div>
+                  {isOverCapacity && <div className="rounded-lg bg-[var(--color-warning)]/15 p-3 font-bold text-[var(--color-warning)]">정원 초과 입장 · 감사 이력 저장</div>}
                   <div className="flex items-center justify-between">
                     <span className="text-[var(--color-muted-soft)]">좌석</span>
                     <span className="font-semibold text-[var(--color-ink)]">{ticketSeat || "정보 없음"}</span>

@@ -290,6 +290,142 @@ export type EventParams = {
   eventType?: "live" | "culture";
 };
 
+export type GuestListDto = {
+  id: string;
+  eventId: string;
+  name: string;
+  promoterName?: string | null;
+  isActive: boolean;
+};
+
+export type GuestEntryDto = {
+  id: string;
+  eventId: string;
+  listId: string;
+  listName: string;
+  name: string;
+  tier: "guest" | "vip" | "comp";
+  partySize: number;
+  checkedInCount: number;
+  remainingCount: number;
+  phoneLast4: string;
+  note: string;
+  status: "active" | "cancelled";
+  passToken: string;
+  qrPayload: string;
+  isReentry?: boolean;
+};
+
+export type VenueIdCheckPolicy = "unset" | "manual_required" | "not_required";
+
+export type GuestPassDto = {
+  event: {
+    id: string;
+    title: string;
+    dateDisplay: string;
+    startAt: string;
+    entryStartAt?: string | null;
+    venue: string;
+    address?: string | null;
+    detailAddress?: string | null;
+    venueIdCheckPolicy: VenueIdCheckPolicy;
+  };
+  guest: Pick<GuestEntryDto, "name" | "tier" | "partySize" | "status" | "qrPayload">;
+};
+
+export type EventAccessInviteDto = {
+  id: string;
+  role: "staff" | "promoter";
+  expiresAt: string;
+  acceptedAt?: string | null;
+  revokedAt?: string | null;
+  inviteUrl?: string;
+};
+
+export type DoorSaleDto = {
+  id: string;
+  doorSaleId: string;
+  eventId: string;
+  channel: "dyve" | "external" | "free";
+  paymentMethod: "dyve" | "card" | "cash" | "free";
+  partySize: number;
+  checkedInCount: number;
+  remainingCount: number;
+  unitPrice: number;
+  bookingFee: number;
+  totalAmount: number;
+  status: string;
+  passToken: string;
+  qrPayload: string;
+  isReentry: boolean;
+  overCapacity: boolean;
+  createdAt: string;
+};
+
+export type DoorOfferDto = {
+  event: Record<string, unknown>;
+  eventId: string;
+  price: number;
+  bookingFeePerTicket: number;
+  available: boolean;
+  saleStartAt: string | null;
+  saleEndAt: string | null;
+  venueLinkStatus: "none" | "pending" | "approved" | "rejected";
+};
+
+export type DoorSaleIntentDto = {
+  doorSaleId: string;
+  paymentId: string;
+  amount: number;
+  unitPrice: number;
+  bookingFee: number;
+  provider: string;
+  providerPaymentId: string;
+  status: string;
+  expiresAt: string;
+  clientSecret?: string | null;
+  confirmationToken?: string | null;
+  checkout?: NicepayCheckout | null;
+  passToken: string;
+};
+
+export type NightReportDto = {
+  eventId: string;
+  admission: {
+    ticketExpected: number;
+    ticketCheckedIn: number;
+    guestExpected: number;
+    guestCheckedIn: number;
+    doorExpected: number;
+    doorCheckedIn: number;
+    expected: number;
+    checkedIn: number;
+  };
+  revenue: Array<{
+    channel: DoorSaleDto["channel"];
+    payment_method: DoorSaleDto["paymentMethod"];
+    people: number;
+    amount: number;
+    fees: number;
+  }>;
+  venueSettlementAmount: number;
+  customerFees: number;
+  overCapacityAdmissions: number;
+  promoters: Array<{
+    listId: string;
+    listName: string;
+    promoterName?: string | null;
+    expected: number;
+    checkedIn: number;
+    entryRate: number;
+  }>;
+};
+
+export type DoorPassDto = {
+  doorSale: DoorSaleDto;
+  event: Record<string, unknown>;
+};
+
 export type AddressSearchResult = {
   roadAddr: string;
   roadAddrPart1: string;
@@ -1440,12 +1576,94 @@ export const api = {
   listMyRefunds: async (signal?: AbortSignal) =>
     unwrapList(await request("/me/refunds", { auth: true, signal })),
   scanCheckin: async (
-    payload: { eventId: string; qr?: string; ticketNumber?: string },
+    payload: {
+      eventId: string;
+      qr?: string;
+      ticketNumber?: string;
+      guestEntryId?: string;
+      doorSaleId?: string;
+      quantity?: number;
+      capacityOverrideReason?: string;
+    },
     signal?: AbortSignal,
   ) =>
     unwrapData(await request("/checkin/scan", { method: "POST", body: payload, auth: true, signal })),
   getEventCheckinStatus: async (eventId: string, signal?: AbortSignal) =>
     unwrapData(await request(`/events/${eventId}/checkin-status`, { auth: true, signal })),
+  updateAdmissionSettings: async (
+    eventId: string,
+    venueIdCheckPolicy: Exclude<VenueIdCheckPolicy, "unset">,
+    signal?: AbortSignal,
+  ) => unwrapData(await request(`/events/${eventId}/admission-settings`, {
+    method: "PATCH",
+    body: { venueIdCheckPolicy, responsibilityAccepted: true },
+    auth: true,
+    signal,
+  })),
+  listGuestLists: async (eventId: string, signal?: AbortSignal): Promise<ApiListResponse<GuestListDto>> =>
+    unwrapList(await request(`/events/${eventId}/guest-lists`, { auth: true, signal })),
+  createGuestList: async (eventId: string, name: string, signal?: AbortSignal): Promise<GuestListDto> =>
+    unwrapData(await request(`/events/${eventId}/guest-lists`, { method: "POST", body: { name }, auth: true, signal })),
+  listGuestEntries: async (eventId: string, search = "", signal?: AbortSignal): Promise<ApiListResponse<GuestEntryDto>> =>
+    unwrapList(await request(`/events/${eventId}/guest-entries`, { params: search ? { search } : undefined, auth: true, signal })),
+  createGuestEntry: async (eventId: string, payload: Record<string, unknown>, signal?: AbortSignal): Promise<GuestEntryDto> =>
+    unwrapData(await request(`/events/${eventId}/guest-entries`, { method: "POST", body: payload, auth: true, signal })),
+  updateGuestEntry: async (eventId: string, entryId: string, payload: Record<string, unknown>, signal?: AbortSignal): Promise<GuestEntryDto> =>
+    unwrapData(await request(`/events/${eventId}/guest-entries/${entryId}`, { method: "PATCH", body: payload, auth: true, signal })),
+  reverseGuestCheckin: async (eventId: string, entryId: string, quantity: number, reason: string, signal?: AbortSignal): Promise<GuestEntryDto> =>
+    unwrapData(await request(`/events/${eventId}/guest-entries/${entryId}/checkin`, { method: "DELETE", body: { quantity, reason }, auth: true, signal })),
+  importGuestCsv: async (eventId: string, listId: string, file: File, signal?: AbortSignal): Promise<ApiListResponse<GuestEntryDto>> => {
+    const form = new FormData();
+    form.append("file", file);
+    return unwrapList(await request(`/events/${eventId}/guest-lists/${listId}/import`, { method: "POST", body: form, auth: true, signal }));
+  },
+  getGuestPass: async (token: string, signal?: AbortSignal): Promise<GuestPassDto> =>
+    unwrapData(await request(`/invites/${token}`, { signal })),
+  listVenueOperationEvents: async (scope: "today" | "upcoming" | "past" | "pending" | "all" = "all", signal?: AbortSignal) =>
+    unwrapList(await request("/venue-operations/events", { params: { scope }, auth: true, signal })),
+  reviewVenueLink: async (
+    eventId: string,
+    payload: {
+      action: "approve" | "reject";
+      reason?: string;
+      venueIdCheckPolicy?: Exclude<VenueIdCheckPolicy, "unset">;
+      responsibilityAccepted?: boolean;
+    },
+    signal?: AbortSignal,
+  ) => unwrapData(await request(`/events/${eventId}/venue-link/review`, { method: "POST", body: payload, auth: true, signal })),
+  updateDoorSettings: async (
+    eventId: string,
+    payload: { enabled: boolean; price: number; saleStartAt: string; saleEndAt: string },
+    signal?: AbortSignal,
+  ) => unwrapData(await request(`/events/${eventId}/door-settings`, { method: "PATCH", body: payload, auth: true, signal })),
+  listEventAccessInvites: async (eventId: string, signal?: AbortSignal): Promise<ApiListResponse<EventAccessInviteDto>> =>
+    unwrapList(await request(`/events/${eventId}/access-invites`, { auth: true, signal })),
+  createEventAccessInvite: async (eventId: string, role: "staff" | "promoter", signal?: AbortSignal): Promise<EventAccessInviteDto> =>
+    unwrapData(await request(`/events/${eventId}/access-invites`, { method: "POST", body: { role }, auth: true, signal })),
+  revokeEventAccessInvite: async (eventId: string, inviteId: string, signal?: AbortSignal) =>
+    unwrapData(await request(`/events/${eventId}/access-invites/${inviteId}`, { method: "DELETE", auth: true, signal })),
+  acceptEventAccessInvite: async (token: string, signal?: AbortSignal): Promise<{ eventId: string; role: "staff" | "promoter"; accepted: boolean }> =>
+    unwrapData(await request(`/access-invites/${token}/accept`, { method: "POST", auth: true, signal })),
+  createExternalDoorSale: async (
+    eventId: string,
+    payload: { quantity: number; paymentMethod: "card" | "cash" | "free"; capacityOverrideReason?: string },
+    signal?: AbortSignal,
+  ): Promise<DoorSaleDto> =>
+    unwrapData(await request(`/events/${eventId}/door-sales/external`, { method: "POST", body: payload, auth: true, signal })),
+  listExternalDoorSales: async (eventId: string, signal?: AbortSignal): Promise<ApiListResponse<DoorSaleDto>> =>
+    unwrapList(await request(`/events/${eventId}/door-sales/external`, { auth: true, signal })),
+  voidExternalDoorSale: async (eventId: string, doorSaleId: string, reason: string, signal?: AbortSignal): Promise<DoorSaleDto> =>
+    unwrapData(await request(`/events/${eventId}/door-sales/${doorSaleId}`, { method: "DELETE", body: { reason }, auth: true, signal })),
+  getDoorOffer: async (eventId: string, signal?: AbortSignal): Promise<DoorOfferDto> =>
+    unwrapData(await request(`/events/${eventId}/door-offer`, { signal })),
+  createDoorSaleIntent: async (eventId: string, quantity: number, clientRequestId: string, signal?: AbortSignal): Promise<DoorSaleIntentDto> =>
+    unwrapData(await request(`/events/${eventId}/door-sales/intent`, { method: "POST", body: { quantity, clientRequestId }, signal })),
+  confirmDoorSalePayment: async (paymentId: string, payload: Record<string, string>, signal?: AbortSignal): Promise<DoorSaleDto> =>
+    unwrapData(await request(`/door-sales/payments/${paymentId}/confirm`, { method: "POST", body: payload, signal })),
+  getDoorPass: async (token: string, signal?: AbortSignal): Promise<DoorPassDto> =>
+    unwrapData(await request(`/door-passes/${token}`, { signal })),
+  getEventNightReport: async (eventId: string, signal?: AbortSignal): Promise<NightReportDto> =>
+    unwrapData(await request(`/events/${eventId}/night-report`, { auth: true, signal })),
   listEventTickets: async (eventId: string, params?: QueryParams, signal?: AbortSignal) =>
     unwrapList(await request(`/events/${eventId}/tickets`, { params, auth: true, signal })),
   holdSeats: async (eventId: string, payload: unknown, signal?: AbortSignal) =>

@@ -102,6 +102,17 @@ export type Event = {
   liked?: boolean;
   likeCount?: number;
   refundPolicy?: RefundPolicy | null;
+  venueProfileId?: string | null;
+  venueLinkStatus?: "none" | "pending" | "approved" | "rejected";
+  venueLinkRejectionReason?: string | null;
+  venueIdCheckPolicy?: "unset" | "manual_required" | "not_required";
+  venueIdCheckAcknowledgedAt?: string | null;
+  venueIdCheckAcknowledgedByOwnerId?: string | null;
+  venueIdCheckPolicyVersion?: string;
+  doorSalesEnabled?: boolean;
+  doorPrice?: number | null;
+  doorSaleStartAt?: string | null;
+  doorSaleEndAt?: string | null;
 };
 
 type EventLike = Partial<Event> & Record<string, unknown>;
@@ -408,6 +419,23 @@ export const normalizeEvent = <T extends EventLike>(event: T): Event & T => {
     performanceChecklist,
     liked: typeof event.liked === "boolean" ? event.liked : false,
     likeCount: typeof event.likeCount === "number" ? event.likeCount : 0,
+    venueProfileId: toNullableString(event.venueProfileId ?? event.venue_profile_id),
+    venueLinkStatus:
+      event.venueLinkStatus === "pending" || event.venueLinkStatus === "approved" || event.venueLinkStatus === "rejected"
+        ? event.venueLinkStatus
+        : "none",
+    venueLinkRejectionReason: toNullableString(event.venueLinkRejectionReason ?? event.venue_link_rejection_reason),
+    venueIdCheckPolicy:
+      event.venueIdCheckPolicy === "manual_required" || event.venueIdCheckPolicy === "not_required"
+        ? event.venueIdCheckPolicy
+        : "unset",
+    venueIdCheckAcknowledgedAt: toNullableString(event.venueIdCheckAcknowledgedAt),
+    venueIdCheckAcknowledgedByOwnerId: toNullableString(event.venueIdCheckAcknowledgedByOwnerId),
+    venueIdCheckPolicyVersion: toNullableString(event.venueIdCheckPolicyVersion) ?? "",
+    doorSalesEnabled: toBoolean(event.doorSalesEnabled ?? event.door_sales_enabled),
+    doorPrice: toNumberOrNull(event.doorPrice ?? event.door_price),
+    doorSaleStartAt: toNullableString(event.doorSaleStartAt ?? event.door_sale_start_at),
+    doorSaleEndAt: toNullableString(event.doorSaleEndAt ?? event.door_sale_end_at),
   };
 };
 

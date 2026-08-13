@@ -48,6 +48,8 @@ interface PerformanceDetailScreenProps {
   onConvertTableToOpen?: (sourceTableOptionId: string) => void;
   onBack: () => void;
   onBook?: () => void;
+  onDoorSale?: () => void;
+  doorSaleAvailable?: boolean;
   isLiked?: boolean;
   likeCount?: number;
   onToggleLike?: () => void;
@@ -123,6 +125,8 @@ export function PerformanceDetailScreen({
   onOpenChecklist,
   onBack,
   onBook,
+  onDoorSale,
+  doorSaleAvailable = false,
   isLiked,
   likeCount,
   onToggleLike,
@@ -351,6 +355,14 @@ export function PerformanceDetailScreen({
             </div>
           </dl>
 
+          {event?.venueIdCheckPolicy === "manual_required" && (
+            <div className="mt-4 space-y-1 rounded-[var(--radius-card-md)] bg-[var(--color-warning-soft)] p-4 text-sm text-[var(--color-body)]">
+              <p className="break-keep">이 행사는 업장이 현장에서 실물 신분증을 직접 확인합니다.</p>
+              <p className="break-keep">신분증을 지참해 주세요.</p>
+              <p className="break-keep">DYVE는 신분증 정보를 수집하거나 인증하지 않습니다.</p>
+            </div>
+          )}
+
           {checklistStatus && (
             <div
               className={`mt-4 rounded-[var(--radius-card-md)] border p-4 ${
@@ -577,7 +589,8 @@ export function PerformanceDetailScreen({
         </div>}
       </div>
 
-      <div className="mobile-fixed-bar app-bottom-bar border-t p-3 pb-3">
+      <div className={`mobile-fixed-bar app-bottom-bar border-t p-3 pb-3 ${doorSaleAvailable ? "grid grid-cols-2 gap-2" : ""}`}>
+        {doorSaleAvailable && <Button size="cta" variant="secondary" onClick={onDoorSale}>현매 구매</Button>}
         <Button
           size="cta"
           onClick={handleBook}

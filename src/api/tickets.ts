@@ -19,6 +19,7 @@ export type Ticket = {
   title: string;
   image: string;
   venue: string;
+  venueIdCheckPolicy?: "unset" | "manual_required" | "not_required";
   startAt?: string;
   dateDisplay: string;
   seat?: string;
