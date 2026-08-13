@@ -21,6 +21,10 @@ import {
   preloadNicepayCheckout,
   type NicepayCheckout,
 } from "../utils/nicepay";
+import {
+  isValidKoreanMobileNumber,
+  normalizeKoreanMobileNumber,
+} from "../utils/phone";
 import "react-datepicker/dist/react-datepicker.css";
 
 type AnswerValue = string | string[] | boolean;
@@ -34,13 +38,6 @@ const EMPTY_AGREEMENTS: Record<AgreementKey, boolean> = {
 const SEOUL_TIME_ZONE = "Asia/Seoul";
 const AVAILABILITY_DAYS_BEFORE = 7;
 const AVAILABILITY_DAYS_AFTER = 28;
-const KOREAN_PHONE_PATTERN = /^0\d{8,10}$/;
-
-const normalizeKoreanPhoneNumber = (value: string) => {
-  const digits = sanitizeNumericInput(value);
-  return digits.startsWith("82") ? `0${digits.slice(2)}` : digits;
-};
-
 const isMissingAnswer = (value: AnswerValue | undefined) =>
   value == null ||
   value === "" ||
@@ -141,7 +138,7 @@ export function GroupDiveDetailPage() {
         ]);
         setNickname(me.nickname || me.name || "");
         setEmail(me.accountInfo?.email || "");
-        setPhoneNumber(normalizeKoreanPhoneNumber(me.accountInfo?.phoneNumber || ""));
+        setPhoneNumber(normalizeKoreanMobileNumber(me.accountInfo?.phoneNumber));
         setExistingApplicationId(
           applications.data.find(
             (item) => item.groupDiveId === groupDiveId && item.status !== "cancelled",
@@ -200,12 +197,12 @@ export function GroupDiveDetailPage() {
     if (!phoneNumber.trim()) {
       return failField("phone", "group-dive-phone", "전화번호를 입력해 주세요.");
     }
-    const normalizedPhoneNumber = normalizeKoreanPhoneNumber(phoneNumber);
-    if (!KOREAN_PHONE_PATTERN.test(normalizedPhoneNumber)) {
+    const normalizedPhoneNumber = normalizeKoreanMobileNumber(phoneNumber);
+    if (!isValidKoreanMobileNumber(normalizedPhoneNumber)) {
       return failField(
         "phone",
         "group-dive-phone",
-        "전화번호는 0으로 시작하는 9~11자리 숫자로 입력해 주세요.",
+        "010으로 시작하는 11자리 번호를 입력해 주세요.",
       );
     }
     if (group?.areas.length && !areaId) {
@@ -267,7 +264,7 @@ export function GroupDiveDetailPage() {
       return;
     }
     if (!validateApplication()) return;
-    setPhoneNumber(normalizeKoreanPhoneNumber(phoneNumber));
+    setPhoneNumber(normalizeKoreanMobileNumber(phoneNumber));
     setPreparedCheckout(null);
     setError(null);
     setIsCheckoutOpen(true);
@@ -279,7 +276,7 @@ export function GroupDiveDetailPage() {
     try {
       setIsSubmitting(true);
       setError(null);
-      const normalizedPhoneNumber = normalizeKoreanPhoneNumber(phoneNumber);
+      const normalizedPhoneNumber = normalizeKoreanMobileNumber(phoneNumber);
       setPhoneNumber(normalizedPhoneNumber);
       await api.updateMe({ email: email.trim(), phoneNumber: normalizedPhoneNumber });
       const selectedScheduleIds = group.schedules
@@ -656,7 +653,7 @@ export function GroupDiveDetailPage() {
                       setPhoneNumber(sanitizeNumericInput(event.target.value));
                       clearFieldError("phone");
                     }}
-                    onBlur={() => setPhoneNumber((current) => normalizeKoreanPhoneNumber(current))}
+                    onBlur={() => setPhoneNumber((current) => normalizeKoreanMobileNumber(current))}
                     placeholder="01012345678"
                   />
                 </Field>
