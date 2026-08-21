@@ -5,6 +5,8 @@ import { Badge } from "../ui/badge";
 import { NavHeader } from "./NavHeader";
 import { DyveIcon } from "./DyveIcon";
 import { DyveImage } from "./DyveImage";
+import { PaymentMethodSelector } from "./PaymentMethodSelector";
+import type { PaymentMethod } from "../../../utils/nicepay";
 import {
   MAX_ASSIGNED_SEAT_COLS,
   MAX_ASSIGNED_SEAT_ROWS,
@@ -40,6 +42,7 @@ export type CheckoutDraft = {
   tableOptionId?: string;
   discountCode?: string;
   discountCodeInput?: string;
+  paymentMethod?: PaymentMethod;
   groupDiveAnswers?: {
     nickname: string;
     gender: "male" | "female" | "other";
@@ -120,6 +123,9 @@ export function CheckoutScreen({
   );
   const [discountCodeInput, setDiscountCodeInput] = useState(
     initialDraft?.discountCodeInput ?? appliedDiscount?.code ?? "",
+  );
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>(
+    initialDraft?.paymentMethod ?? "card",
   );
   const [groupDiveNickname, setGroupDiveNickname] = useState(restoredGroupDiveAnswers?.nickname ?? "");
   const [groupDiveGender, setGroupDiveGender] = useState<"male" | "female" | "other" | "">(
@@ -648,6 +654,14 @@ export function CheckoutScreen({
           </div>
         </section>
 
+        {!event.isFree && (
+          <PaymentMethodSelector
+            value={paymentMethod}
+            onChange={setPaymentMethod}
+            disabled={preparedNicepay}
+          />
+        )}
+
         {/* Pricing */}
         {!meetsMinimumBookingQuantity && (
           <p role="alert" className="text-center text-sm font-semibold text-[var(--color-primary)]">
@@ -727,6 +741,7 @@ export function CheckoutScreen({
               tableOptionId: selectedTableOption?.id,
               discountCode: appliedDiscount?.code,
               discountCodeInput: discountCodeInput.trim() || undefined,
+              paymentMethod,
               groupDiveAnswers: isGroupDive
                 ? {
                     nickname: groupDiveNickname.trim(),

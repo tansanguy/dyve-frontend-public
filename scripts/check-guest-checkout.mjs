@@ -133,6 +133,15 @@ try {
   });
   await page.getByRole("button", { name: "예매하기" }).click();
   await page.waitForURL(`${baseUrl}/checkout/${eventId}`);
+  for (const width of [320, 390, 430]) {
+    await page.setViewportSize({ width, height: 844 });
+    assert.equal(
+      await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth),
+      false,
+      `checkout must not overflow at ${width}px`,
+    );
+  }
+  await page.setViewportSize({ width: 390, height: 844 });
   await page.getByRole("button", { name: /A열 1번 좌석/ }).click();
   await page.getByLabel("닉네임").fill("게스트다이버");
   await page.getByLabel("성별").selectOption("female");
@@ -140,6 +149,7 @@ try {
   await page.getByRole("textbox", { name: "할인코드" }).fill("save10");
   await page.getByRole("button", { name: "적용" }).click();
   await page.getByText("로그인 후 할인 여부를 확인해요.").waitFor();
+  await page.getByRole("radio", { name: /계좌이체/ }).check();
 
   await page.locator("[data-checkout-submit]").click();
   await page.getByRole("heading", { name: "예매는 로그인이 필요해요" }).waitFor();
@@ -155,6 +165,7 @@ try {
     admissionType: "assigned",
     seatIds: ["A-1"],
     discountCodeInput: "SAVE10",
+    paymentMethod: "bank",
     groupDiveAnswers: {
       nickname: "게스트다이버",
       gender: "female",
@@ -198,7 +209,7 @@ try {
     quantity: 1,
     seatIds: ["A-1"],
     discountCode: "SAVE10",
-    method: "card",
+    method: "bank",
     groupDiveAnswers: {
       nickname: "게스트다이버",
       gender: "female",

@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { NavHeader } from "../components/figma/dyve/NavHeader";
 import { LoadingIndicator } from "../components/LoadingIndicator";
 import { PageState } from "../components/figma/dyve/PageState";
+import { PaymentMethodSelector } from "../components/figma/dyve/PaymentMethodSelector";
 import { Button } from "../components/figma/ui/button";
 import { BuddyDiveApplicationForm } from "../components/figma/dyve/BuddyDiveApplicationForm";
 import { BuddyApplicationDetails } from "../components/figma/dyve/BuddyApplicationDetails";
@@ -15,7 +16,7 @@ import {
   CONNECTION_LIFECYCLE_LABEL,
   formatConnectionDeadline,
 } from "../utils/connectionDisplay";
-import { openNicepayCheckout } from "../utils/nicepay";
+import { openNicepayCheckout, type PaymentMethod } from "../utils/nicepay";
 
 export function ConnectionDetailPage() {
   const navigate = useNavigate();
@@ -26,6 +27,7 @@ export function ConnectionDetailPage() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isSubmittingApply, setIsSubmittingApply] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("card");
 
   const load = useCallback(async () => {
     if (!id) return;
@@ -57,7 +59,7 @@ export function ConnectionDetailPage() {
 
   const completePayment = async (applicationId: string) => {
     if (!id) return;
-    const payment = await api.createConnectionPayment(id, applicationId, { method: "card" });
+    const payment = await api.createConnectionPayment(id, applicationId, { method: paymentMethod });
     if (payment.creditApplied > 0) {
       toast.info(
         `${payment.creditApplied.toLocaleString()} 크레딧 적용 · ${payment.payableAmount.toLocaleString()}원 결제`,
@@ -285,9 +287,16 @@ export function ConnectionDetailPage() {
               />
             </div>
             {(connection.participationFee ?? 0) > 0 && connection.myApplication.paymentStatus !== "paid" && (
-              <Button className="mt-4 w-full" disabled={isSubmittingApply} onClick={handleRetryPayment}>
-                {isSubmittingApply ? "결제 처리 중" : "결제 계속하기"}
-              </Button>
+              <div className="mt-4 space-y-3">
+                <PaymentMethodSelector
+                  value={paymentMethod}
+                  onChange={setPaymentMethod}
+                  disabled={isSubmittingApply}
+                />
+                <Button className="w-full" disabled={isSubmittingApply} onClick={handleRetryPayment}>
+                  {isSubmittingApply ? "결제 처리 중" : "결제 계속하기"}
+                </Button>
+              </div>
             )}
             {connection.myApplication.conversationId && (
               <Button className="mt-4 w-full" onClick={() => navigate(`/chats/${connection.myApplication?.conversationId}`)}>
@@ -306,12 +315,23 @@ export function ConnectionDetailPage() {
         )}
 
         {!connection.canManage && !connection.myApplication && connection.canApply && (
-          <BuddyDiveApplicationForm
-            isSubmitting={isSubmittingApply}
-            lineup={connection.lineup}
-            participationFee={connection.participationFee}
-            onSubmit={handleApply}
-          />
+          <>
+            {connection.participationFee > 0 && (
+              <div className="mt-8">
+                <PaymentMethodSelector
+                  value={paymentMethod}
+                  onChange={setPaymentMethod}
+                  disabled={isSubmittingApply}
+                />
+              </div>
+            )}
+            <BuddyDiveApplicationForm
+              isSubmitting={isSubmittingApply}
+              lineup={connection.lineup}
+              participationFee={connection.participationFee}
+              onSubmit={handleApply}
+            />
+          </>
         )}
       </div>
     </main>

@@ -1,7 +1,9 @@
+export type PaymentMethod = "card" | "bank";
+
 export type NicepayCheckout = {
   type: "nicepay-js";
   clientId: string;
-  method: "card";
+  method: "card" | "cardAndEasyPay" | "bank";
   orderId: string;
   amount: number;
   goodsName: string;

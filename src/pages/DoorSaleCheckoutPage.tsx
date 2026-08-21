@@ -2,8 +2,9 @@ import { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { LoadingIndicator } from "../components/LoadingIndicator";
 import { NavHeader } from "../components/figma/dyve/NavHeader";
+import { PaymentMethodSelector } from "../components/figma/dyve/PaymentMethodSelector";
 import { api, formatApiError, isAbortError, type DoorOfferDto } from "../services/api";
-import { openNicepayCheckout, preloadNicepayCheckout } from "../utils/nicepay";
+import { openNicepayCheckout, preloadNicepayCheckout, type PaymentMethod } from "../utils/nicepay";
 
 export function DoorSaleCheckoutPage() {
   const { eventId = "" } = useParams();
@@ -12,6 +13,7 @@ export function DoorSaleCheckoutPage() {
   const requestId = useRef(crypto.randomUUID());
   const [offer, setOffer] = useState<DoorOfferDto | null>(null);
   const [quantity, setQuantity] = useState(1);
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("card");
   const [isLoading, setIsLoading] = useState(true);
   const [isPaying, setIsPaying] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -41,7 +43,7 @@ export function DoorSaleCheckoutPage() {
     try {
       setIsPaying(true);
       setError(null);
-      const intent = await api.createDoorSaleIntent(eventId, quantity, requestId.current);
+      const intent = await api.createDoorSaleIntent(eventId, quantity, requestId.current, paymentMethod);
       if (intent.provider === "nicepay" && intent.checkout) {
         await preloadNicepayCheckout();
         openNicepayCheckout(intent.checkout, (message) => {
@@ -85,6 +87,15 @@ export function DoorSaleCheckoutPage() {
           <div className="flex items-center justify-between"><span className="font-bold">수량</span><div className="flex items-center gap-3"><button aria-label="수량 줄이기" onClick={() => changeQuantity(quantity - 1)} className="h-10 w-10 rounded-full bg-[var(--color-surface-muted)] text-lg font-bold">−</button><strong className="w-8 text-center tabular-nums">{quantity}</strong><button aria-label="수량 늘리기" onClick={() => changeQuantity(quantity + 1)} className="h-10 w-10 rounded-full bg-[var(--color-surface-muted)] text-lg font-bold">+</button></div></div>
           <dl className="mt-5 space-y-3 border-t border-[var(--color-hairline)] pt-4 text-sm"><div className="flex justify-between"><dt>현매 티켓 ({quantity}매)</dt><dd>{(price * quantity).toLocaleString()}원</dd></div><div className="flex justify-between"><dt>예매 수수료</dt><dd>{fee.toLocaleString()}원</dd></div><div className="flex justify-between border-t border-[var(--color-hairline)] pt-3 text-base font-bold"><dt>총 결제금액</dt><dd>{total.toLocaleString()}원</dd></div></dl>
         </section>
+
+        <PaymentMethodSelector
+          value={paymentMethod}
+          onChange={(method) => {
+            setPaymentMethod(method);
+            requestId.current = crypto.randomUUID();
+          }}
+          disabled={isPaying}
+        />
 
         {!offer?.available && <p className="break-keep rounded-xl bg-[var(--color-warning)]/10 p-4 text-sm font-bold text-[var(--color-warning)]">현재는 업장이 승인한 현매 판매 시간이 아닙니다.</p>}
         {error && <p className="break-keep rounded-xl bg-[var(--color-primary)]/10 p-4 text-sm text-[var(--color-error)]">{error}</p>}

@@ -6,6 +6,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "../ui/dialog";
+import type { PaymentMethod } from "../../../utils/nicepay";
+import { PaymentMethodSelector } from "./PaymentMethodSelector";
 
 type Props = {
   open: boolean;
@@ -17,6 +19,8 @@ type Props = {
   currentAmount: number;
   depositRefunded?: boolean;
   isSubmitting: boolean;
+  paymentMethod: PaymentMethod;
+  onPaymentMethodChange: (method: PaymentMethod) => void;
   onConfirm: () => void;
 };
 
@@ -32,6 +36,8 @@ export function GroupDivePaymentReviewDialog({
   currentAmount,
   depositRefunded = false,
   isSubmitting,
+  paymentMethod,
+  onPaymentMethodChange,
   onConfirm,
 }: Props) {
   const isDeposit = mode === "deposit";
@@ -96,6 +102,12 @@ export function GroupDivePaymentReviewDialog({
             보증금이 이미 환불되어 이번에는 총 참가비 전액을 결제합니다.
           </p>
         )}
+
+        <PaymentMethodSelector
+          value={paymentMethod}
+          onChange={onPaymentMethodChange}
+          disabled={isSubmitting}
+        />
 
         <div className="grid gap-2">
           <Button type="button" size="cta" disabled={isSubmitting} onClick={onConfirm}>

@@ -6,7 +6,7 @@ import { GroupDivePaymentReviewDialog } from "../components/figma/dyve/GroupDive
 import { NavHeader } from "../components/figma/dyve/NavHeader";
 import { Button } from "../components/figma/ui/button";
 import { api, formatApiError, type GroupDiveApplicationDto } from "../services/api";
-import { openNicepayCheckout, preloadNicepayCheckout } from "../utils/nicepay";
+import { openNicepayCheckout, preloadNicepayCheckout, type PaymentMethod } from "../utils/nicepay";
 
 const STATUS_LABELS: Record<string, { title: string; description: string }> = {
   payment_pending: { title: "보증 신청 결제 대기", description: "결제를 마치면 모집 추적이 시작돼요." },
@@ -33,6 +33,7 @@ export function GroupDiveApplicationPage() {
   const [paymentPurpose, setPaymentPurpose] = useState<
     "deposit_and_application_fee" | "final_payment" | null
   >(null);
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("card");
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
@@ -70,7 +71,7 @@ export function GroupDiveApplicationPage() {
       setPaymentPurpose(null);
       const payment = await api.createGroupDivePayment(applicationId, {
         purpose,
-        method: "card",
+        method: paymentMethod,
       });
       if (payment.provider === "nicepay" && payment.checkout) {
         await preloadNicepayCheckout();
@@ -205,6 +206,8 @@ export function GroupDiveApplicationPage() {
         }
         depositRefunded={depositWasRefunded}
         isSubmitting={isActing}
+        paymentMethod={paymentMethod}
+        onPaymentMethodChange={setPaymentMethod}
         onConfirm={() => {
           if (paymentPurpose) void startPayment(paymentPurpose);
         }}

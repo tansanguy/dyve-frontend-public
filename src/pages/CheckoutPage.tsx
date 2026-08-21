@@ -55,6 +55,7 @@ const isCheckoutDraft = (value: unknown): value is CheckoutDraft => {
   if (draft.tableOptionId !== undefined && typeof draft.tableOptionId !== "string") return false;
   if (draft.discountCode !== undefined && typeof draft.discountCode !== "string") return false;
   if (draft.discountCodeInput !== undefined && typeof draft.discountCodeInput !== "string") return false;
+  if (draft.paymentMethod !== undefined && !["card", "bank"].includes(String(draft.paymentMethod))) return false;
   if (draft.groupDiveAnswers !== undefined) {
     if (!draft.groupDiveAnswers || typeof draft.groupDiveAnswers !== "object") return false;
     const answers = draft.groupDiveAnswers as Record<string, unknown>;
@@ -464,6 +465,7 @@ export function CheckoutPage() {
           tableOptionId,
           discountCode,
           discountCodeInput,
+          paymentMethod = "card",
           groupDiveAnswers,
         }) => {
           if (!isMember || !user) {
@@ -475,6 +477,7 @@ export function CheckoutPage() {
               tableOptionId,
               discountCode,
               discountCodeInput,
+              paymentMethod,
               groupDiveAnswers,
             };
             saveCheckoutDraft(id, draft);
@@ -509,7 +512,7 @@ export function CheckoutPage() {
               seatIds: admissionType === "assigned" ? seatIds : undefined,
               tableOptionId: admissionType === "table" ? tableOptionId : undefined,
               discountCode,
-              method: "card",
+              method: paymentMethod,
               groupDiveAnswers,
             });
             const paymentId = readPaymentId(paymentIntent);

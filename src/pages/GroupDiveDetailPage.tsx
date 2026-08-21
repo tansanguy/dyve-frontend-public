@@ -11,6 +11,7 @@ import { DyveIcon } from "../components/figma/dyve/DyveIcon";
 import { DyveImage } from "../components/figma/dyve/DyveImage";
 import { HorizontalRail } from "../components/figma/dyve/HorizontalRail";
 import { NavHeader } from "../components/figma/dyve/NavHeader";
+import { PaymentMethodSelector } from "../components/figma/dyve/PaymentMethodSelector";
 import { Button } from "../components/figma/ui/button";
 import { Input } from "../components/figma/ui/input";
 import { Textarea } from "../components/figma/ui/textarea";
@@ -20,6 +21,7 @@ import {
   openNicepayCheckout,
   preloadNicepayCheckout,
   type NicepayCheckout,
+  type PaymentMethod,
 } from "../utils/nicepay";
 import {
   isValidKoreanMobileNumber,
@@ -116,6 +118,7 @@ export function GroupDiveDetailPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [preparedCheckout, setPreparedCheckout] = useState<NicepayCheckout | null>(null);
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("card");
   const [error, setError] = useState<string | null>(null);
   const [isProposalOpen, setIsProposalOpen] = useState(false);
   const [proposalRegion, setProposalRegion] = useState("");
@@ -241,7 +244,7 @@ export function GroupDiveDetailPage() {
   const prepareDepositPayment = async (applicationId: string) => {
     const payment = await api.createGroupDivePayment(applicationId, {
       purpose: "deposit_and_application_fee",
-      method: "card",
+      method: paymentMethod,
     });
     if (payment.provider === "nicepay" && payment.checkout) {
       await preloadNicepayCheckout();
@@ -386,6 +389,8 @@ export function GroupDiveDetailPage() {
         isSubmitting={isSubmitting}
         isPrepared={Boolean(preparedCheckout)}
         error={error}
+        paymentMethod={paymentMethod}
+        onPaymentMethodChange={setPaymentMethod}
         onBack={() => {
           if (existingApplicationId) {
             navigate(`/connection/group-dive/applications/${existingApplicationId}`);
@@ -874,6 +879,8 @@ function GroupDiveCheckoutScreen({
   isSubmitting,
   isPrepared,
   error,
+  paymentMethod,
+  onPaymentMethodChange,
   onBack,
   onSubmit,
 }: {
@@ -883,6 +890,8 @@ function GroupDiveCheckoutScreen({
   isSubmitting: boolean;
   isPrepared: boolean;
   error: string | null;
+  paymentMethod: PaymentMethod;
+  onPaymentMethodChange: (method: PaymentMethod) => void;
   onBack: () => void;
   onSubmit: () => void;
 }) {
@@ -916,6 +925,12 @@ function GroupDiveCheckoutScreen({
             </div>
           </div>
         </section>
+
+        <PaymentMethodSelector
+          value={paymentMethod}
+          onChange={onPaymentMethodChange}
+          disabled={isSubmitting || isPrepared}
+        />
 
         <dl className="space-y-2 border-t border-[var(--color-hairline)] pt-4">
           <CheckoutAmountRow label="보증금" amount={group.depositAmount} />

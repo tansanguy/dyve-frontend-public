@@ -2,7 +2,7 @@ import { ACCESS_TOKEN_KEY } from "./storage";
 import type { ArtistProfileDTO } from "../types/artistProfile";
 import type { SettlementType } from "../types/contract";
 import type { PerformanceChecklistAnswers } from "../types/performanceChecklist";
-import type { NicepayCheckout } from "../utils/nicepay";
+import type { NicepayCheckout, PaymentMethod } from "../utils/nicepay";
 
 export const API_ONLY = import.meta.env.VITE_API_ONLY === "1";
 const API_DEBUG_LOGS = import.meta.env.VITE_API_DEBUG === "1";
@@ -1332,7 +1332,7 @@ export const api = {
     unwrapData(await request(`/group-dive-applications/${applicationId}/`, { auth: true, signal })),
   createGroupDivePayment: async (
     applicationId: string,
-    payload: { purpose: "deposit_and_application_fee" | "final_payment"; method: "card" | "pay" },
+    payload: { purpose: "deposit_and_application_fee" | "final_payment"; method: PaymentMethod },
     signal?: AbortSignal,
   ): Promise<GroupDivePaymentIntent> =>
     unwrapData(await request(`/group-dive-applications/${applicationId}/payments/`, { method: "POST", body: payload, auth: true, signal })),
@@ -1656,8 +1656,8 @@ export const api = {
     unwrapData(await request(`/events/${eventId}/door-sales/${doorSaleId}`, { method: "DELETE", body: { reason }, auth: true, signal })),
   getDoorOffer: async (eventId: string, signal?: AbortSignal): Promise<DoorOfferDto> =>
     unwrapData(await request(`/events/${eventId}/door-offer`, { signal })),
-  createDoorSaleIntent: async (eventId: string, quantity: number, clientRequestId: string, signal?: AbortSignal): Promise<DoorSaleIntentDto> =>
-    unwrapData(await request(`/events/${eventId}/door-sales/intent`, { method: "POST", body: { quantity, clientRequestId }, signal })),
+  createDoorSaleIntent: async (eventId: string, quantity: number, clientRequestId: string, paymentMethod: PaymentMethod, signal?: AbortSignal): Promise<DoorSaleIntentDto> =>
+    unwrapData(await request(`/events/${eventId}/door-sales/intent`, { method: "POST", body: { quantity, clientRequestId, method: paymentMethod }, signal })),
   confirmDoorSalePayment: async (paymentId: string, payload: Record<string, string>, signal?: AbortSignal): Promise<DoorSaleDto> =>
     unwrapData(await request(`/door-sales/payments/${paymentId}/confirm`, { method: "POST", body: payload, signal })),
   getDoorPass: async (token: string, signal?: AbortSignal): Promise<DoorPassDto> =>
@@ -1999,7 +1999,7 @@ export const api = {
   createConnectionPayment: async (
     connectionId: string,
     applicationId: string,
-    payload: { method: "card" | "pay" },
+    payload: { method: PaymentMethod },
     signal?: AbortSignal,
   ): Promise<ConnectionPaymentIntent> =>
     unwrapData(await request(`/connections/${connectionId}/applications/${applicationId}/payments/`, { method: "POST", body: payload, auth: true, signal })),
