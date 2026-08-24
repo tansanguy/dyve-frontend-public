@@ -44,6 +44,7 @@ type ManagedItem = {
   email?: string;
   phoneNumber?: string;
   authProvider?: string;
+  ageRange?: string;
   nickname?: string;
   profileName?: string;
   hostProfileName?: string | null;
@@ -211,6 +212,7 @@ export function AdminProfilesPage() {
             nickname: user.nickname ?? undefined,
             email: user.email ?? undefined,
             phoneNumber: user.phoneNumber ?? undefined,
+            ageRange: user.ageRange ?? undefined,
             type: user.activeProfileType ?? undefined,
             status: user.status,
             isBlocked: user.status === "blocked",
@@ -932,6 +934,7 @@ export function AdminProfilesPage() {
                   {tab === "audience" ? (
                     <div className="mt-1 space-y-0.5 ty-caption text-[var(--color-muted)]">
                       <p>{item.authProvider ?? "가입 경로 없음"}{item.nickname ? ` · 닉네임 ${item.nickname}` : ""}</p>
+                      <p>연령대 {item.ageRange ?? "정보 없음"}</p>
                       <p className="break-all">{item.email ?? "이메일 없음"} · {item.phoneNumber ?? "전화번호 없음"}</p>
                     </div>
                   ) : null}
